@@ -1,0 +1,54 @@
+Asylum
+======
+
+Young Sigmund has a few problems.  To help him resolve his mental
+instability you must enter the surreal world of his inner mind and shut
+down the malfunctioning brain cells which are causing him these problems.
+
+Playing
+=======
+
+Well, you don't really need any instructions to play the game.  Just
+remember, the object is to find things that look like brain cells and
+shut them down!  Good luck!
+
+Zones
+=====
+
+There are three zones for you to complete, the Ego, Psyche and Id.  You must
+complete the Ego before you can tackle the Id.  Try the Ego first.
+
+Controls
+========
+
+You can use Acorn standard joysticks - if you have other joystick which don't
+work with the game you should contact the supplier to see if they can help.
+With a joystick, you can choose one of the mouse buttons as the jump key
+using the Define Keys options.
+
+The Options
+===========
+
+There are lots of options to select when the game starts up.  Most are self
+explanatory.  Here are a few which may not be obvious.
+
+* Speed Tweaks - There are a lot of different Acorn machines available, which
+vary in their computing power.  The game will look at the machine when you
+first play it and select the ideal combination.  You may change these if you
+wish.  Ticked options require more computing power.
+
+* Normal/High Quality Sound - High quality sound takes more computing power.
+
+This New Version
+================
+
+Version 2.00 of Asylum has a few new features.  The game is now compressed
+using a specially developed technique.  The game is RISC PC compatible, and
+can now run in mode 49 for use with VGA monitors.  If for any reason you
+don't want to use mode 49 if it is available, press F12 and type:
+
+Set AsylumMode 13
+
+and press return twice.  To return to using mode 49, type Set AsylumMode 49
+in the same way.
+

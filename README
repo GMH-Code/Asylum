@@ -1,0 +1,49 @@
+SDL Asylum
+==========
+
+Young Sigmund has a few problems. To help him resolve his mental instability
+you must enter the surreal world of his inner mind and shut down the
+malfunctioning brain cells. 
+
+SDL Asylum is a C port of the computer game Asylum, which was written by Andy
+Southgate in 1994 for the Acorn Archimedes and is now public domain.  It has
+been tested on Linux and Cygwin, but it should be possible to run it on other
+platforms which support the SDL graphics library.
+
+Installing and running
+======================
+
+	make
+	sudo make install             # optional
+	asylum
+
+You'll need SDL and SDL_mixer.  If you don't have (or don't want to be) root,
+you can invoke the game as "./asylum" from this directory.
+
+Instructions
+============
+
+The game revolves around shooting anything which moves, collecting anything
+which doesn't move, and, most importantly, finding your way to each of the
+eight pulsating neurons scattered throughout the immense map.  Use 'Z', 'X',
+';' and '.' to move and 'Enter' to fire, or remap the keys to something you
+like better.
+
+The one game feature which does merit explicit instruction is teleporting.
+In the first level ("Ego") the teleporters look like candelabra.  To use a
+teleporter, stand in its centre and press "down" (that's '.' with the
+default key settings.)
+
+See the file 'Instruct' for the instructions included with the original game.
+
+Licensing
+=========
+
+SDL Asylum is distributed under GPL version 3.  The original game music
+and graphics are © Andy Southgate 1993, and have been placed in the public
+domain by Andy Southgate.
+
+Web site
+========
+
+http://sdl-asylum.sourceforge.net/
