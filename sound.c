@@ -105,7 +105,9 @@ Mix_Chunk* make_sound(unsigned char samp, int initpitch, int volslide, int pitch
     double vs = ((Sint16)(volslide&0xffff))/44100.0;
     //Sint16 psmax = pitchslide>>16;
     double matching = 0;
-    fprintf(stderr, "."); fflush(stderr);
+    fprintf(stdout, ".");
+    swi_blitz_wait(1);
+    fflush(stdout);
     for (long long unsigned int i = 0; i < numsamples*2*sizeof(Uint16); i += 4, time++, s += 2)
     {
         Uint16 mono = 0;
@@ -287,12 +289,12 @@ void init_sounds()
 {
     if (!sound_available) return;
     init_mulaw();
-    fprintf(stderr, "Building sound effects ");
+    fprintf(stdout, "Building sound effects ");
     init_chunk_bullet();
     init_chunk_player();
     init_chunk_alien();
     init_chunk_maze();
-    fprintf(stderr, " done.\n");
+    fprintf(stdout, " done.\n");
 }
 
 void load_voice(int v, const char* filename)
@@ -301,7 +303,7 @@ void load_voice(int v, const char* filename)
 
     if (file == NULL)
     {
-        fprintf(stderr, "Loading sound effect %s failed\n", filename);
+        fprintf(stdout, "Loading sound effect %s failed\n", filename);
         return;
     }
     SDL_RWseek(file, 0, SEEK_END);
@@ -332,7 +334,7 @@ void dumpmusic(int argc,char** argv)
     char* musicinputpath = argv[2];
     strncat(musicdumppath, musicinputpath, 1000);
     strncat(musicdumppath, ".au", 20);
-    fprintf(stderr, "Dumping music ");
+    fprintf(stdout, "Dumping music ");
     //swi_bodgemusic_load(1,musicinputpath);
     musicdumpfile = fopen(musicdumppath, "w");
     SDL_RWops* tune = SDL_RWFromFile(musicinputpath, "r");

@@ -533,9 +533,11 @@ int getfiles()
 {
     getvitalfiles();
     showloading();
+    swi_blitz_wait(1);
     init_sounds();
     getmusicfiles();
     swi_bodgemusic_start(1);
+    swi_blitz_wait(1);
     getgamefiles();
     return 0;
 }
