@@ -15,8 +15,8 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#include <SDL/SDL.h>
-#include <SDL/SDL_mixer.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 
 #include "asylum_os.h"
 #include "asylum.h"
@@ -58,7 +58,7 @@ void init()
     setdefaults();
     loadconfig();
     vduread(options);
-    swi_removecursors();
+    //swi_removecursors();
     bank = 1;
     switchbank(); //set up bank variables
     switchbank(); //set up bank variables
@@ -71,7 +71,7 @@ void init()
     if (cheatpermit == 2)  abort_game();
     for ( ; ; )
     {
-       playloop:
+       //playloop:
         osbyte_7c();
         if (options_menu(0)) // not in game
         {
@@ -80,7 +80,8 @@ void init()
 	currentzone = 0;
         if (getlevelfiles())
         {
-            notgotlevel: if (1) abort_game();
+           //notgotlevel:
+            if (1) abort_game();
             // or, depending on what getlevelfiles() returned
             continue;
         }
@@ -89,18 +90,20 @@ void init()
         if (game()) continue;
         if (gotallneurons())
         {
-           zonedone:
+           //zonedone:
             if (options.idpermit != 1) permitid();
-            swi_bodgemusic_start(1, 0); // ?? (3,0) in original
+            swi_bodgemusic_start(1); // ?? (3,0) in original
         }
         else                            // was "else if overflow clear"
         {
-            if (options.soundtype == 2) swi_bodgemusic_start(2, 0);
+            if (options.soundtype == 2) swi_bodgemusic_start(2);
             swi_sound_qtempo(0x980);
             swi_bodgemusic_volume(options.musicvol);
         }
         showhighscore();
     }
+
+    vdushutdown();
 }
 
 int abort_game()
@@ -128,19 +131,22 @@ int game()
         else  restartplayer();
         do
         {
-           mainrestart:
+           //mainrestart:
             showgamescreen();
-            if (options.soundtype == 2) swi_bodgemusic_start((plzone != 0), 0);
+            if (options.soundtype == 2) swi_bodgemusic_start((plzone != 0));
             swi_bodgemusic_volume(options.musicvol);
             frameinc = 1;
             rate50 = 1;
             swi_blitz_wait(1);
+            init_keyboard();
             while (!swi_readescapestate())
             {
-                mainloop:
+               //mainloop:
                 if (plzone != currentzone)
                 {
-                    switchzone: loadzone(); goto zonerestart;
+                   //switchzone:
+                    loadzone();
+                    goto zonerestart;
                 }
 //BL saveal
 //BL restoreal
@@ -157,19 +163,19 @@ int game()
                     alfire();
                     wakeupal(xpos, ypos);
                 }
-               rate50link:
+               //rate50link:
                 plmove();
                 bonuscheck();
                 fuelairproc();
                 mazeplot(xpos, ypos);
                 switchcolch();
                 masterplotal = 1;
-                playerplot(true);
+                playerplot(1);
                 moval();
                 project();
                 bullets();
                 alfire();
-                playerplot(false);
+                playerplot(0);
                 bonusplot();
                 scoreadd();
                 update_show_strength();
@@ -189,7 +195,7 @@ int game()
                     rate50 = 1;
                 }
                 else if (frameinc > 1) rate50 = 0;
-               rateskip:
+               //rateskip:
 
                 framectr += frameinc;
 
@@ -236,7 +242,7 @@ void restoreal(uint8_t store[30+78*28])
     if (restore_player(store)) return;
     wipealtab();
     restore_alents(store+30);
-   restored:;
+   //restored:;
 }
 
 void bonus1()
@@ -245,13 +251,11 @@ void bonus1()
 }
 
 const int keydefs[] =
-{ -SDLK_z, -SDLK_x, -SDLK_SEMICOLON, -SDLK_PERIOD, -SDLK_RETURN };
+{ -SDL_SCANCODE_Z, -SDL_SCANCODE_X, -SDL_SCANCODE_SEMICOLON, -SDL_SCANCODE_PERIOD, -SDL_SCANCODE_RETURN };
 
 void setdefaults()
 {
-    checkifarm3();
     options.soundtype = 2;
-    options.soundquality = (arm3 == 0) ? 0 : 1;
     options.soundvol = 0x7f;
     options.musicvol = 0x7f;
     options.leftkey = keydefs[0];
@@ -259,17 +263,15 @@ void setdefaults()
     options.upkey = keydefs[2];
     options.downkey = keydefs[3];
     options.firekey = keydefs[4];
-    options.gearchange = (arm3 == 0) ? 0 : 1;
-    options.explospeed = (arm3 == 0) ? 2 : 1;
     options.fullscreen = 0;
-    options.opengl = 1;
+    options.arm3 = 1;
     options.size = 1; // 640 x 512
     options.scale = 1;
-    options.joyno = 0;
     options.mentalzone = 1;
     options.initials[0] = 'P';
     options.initials[1] = 'S';
     options.initials[2] = 'Y';
+    checkifarm3();
 }
 
 void soundupdate()
@@ -342,7 +344,10 @@ void checkifarm3()
 {
 // The ARM3 is 25-33MHz with a 4Kb cache.  If you have
 // less than that you should probably clear this flag.
-    arm3 = 1;
+    arm3 = options.arm3;
+    //options.soundquality = (arm3 == 0) ? 0 : 1;
+    options.gearchange = (arm3 == 0) ? 0 : 1;
+    options.explospeed = (arm3 == 0) ? 2 : 1;
 }
 
 int checkifextend()
@@ -375,7 +380,7 @@ void loadzone()
 {
     int r1 = currentzone;
 
-    if ((currentzone = plzone) == 0) exitneuron(r1);
+    if ((currentzone = plzone) == 0) exitneuron();
     else enterneuron(r1);
 }
 
@@ -390,7 +395,7 @@ void enterneuron(int r1)
     currentzone = plzone = getneuronfiles(plzone);
     if (!currentzone)
     {
-        exitneuron(r1); return;
+        exitneuron(); return;
     }
     wipealtab();
     getarms();
@@ -403,7 +408,7 @@ void enterneuron(int r1)
     startplayer();
 }
 
-void exitneuron(int r1)
+void exitneuron()
 {
     boardadr = brainadr;
     restoreal(store_for_neuron);
@@ -414,7 +419,7 @@ void exitneuron(int r1)
     backprep(backadr);
     boardreg();
     prepfueltab();
-    wipesoundtab();
+    //wipesoundtab();
 }
 
 
@@ -422,7 +427,7 @@ void setup()
 {
     framectr = 0;
     plzone = _firstzone;
-    wipesoundtab();
+    //wipesoundtab();
     initweapon();
     initprojtab();
     initbultab();
@@ -436,16 +441,16 @@ void setup()
     prepfueltab();
 }
 
-void wipesoundtab()
-{
-//r10=&soundtabofs; temporarily undefined
-    for (int r3 = _soundentlen*8; r3 > 0; r3 -= sizeof(int))
-       loop51:;
-        //*(r10++)=0;
-    for (int r0 = 7; r0 >= 0; r0--)
-       soundkillloop:
-        swi_stasis_volslide(r0, 0xfc00, 0);
-}
+//void wipesoundtab()
+//{
+////r10=&soundtabofs; temporarily undefined
+//    for (int r3 = _soundentlen*8; r3 > 0; r3 -= sizeof(int))
+//       loop51:;
+//        //*(r10++)=0;
+//    for (int r0 = 7; r0 >= 0; r0--)
+//       soundkillloop:
+//        swi_stasis_volslide(r0, 0xfc00, 0);
+//}
 
 void screensave()
 {
@@ -464,6 +469,8 @@ void c_array_initializers()
 
 int main(int argc, char** argv)
 {
+    printf("Asylum by Andy Southgate\nC version by Hugh Robinson\nUpdates by Gregory Maynard-Hoare\n");
+
     find_resources();
 
     if ((argc > 2) && !strcmp(argv[1], "--dumpmusic"))
@@ -478,13 +485,13 @@ int main(int argc, char** argv)
     dropprivs();
 
     SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO);
-    SDL_WM_SetCaption("Asylum", "Asylum");
-    SDL_EnableUNICODE(1);
+    //SDL_WM_SetCaption("Asylum", "Asylum");
+    //SDL_EnableUNICODE(1);
 #ifndef _NO_SOUND
     init_audio();
 #endif
     c_array_initializers();
-    swi_stasis_control(8, 8);
+    //swi_stasis_control(8, 8);
     init(); // while (snuffctr>=300);
     SDL_Quit();
     exit(0);
@@ -525,7 +532,7 @@ int getfiles()
     showloading();
     init_sounds();
     getmusicfiles();
-    swi_bodgemusic_start(1, 0);
+    swi_bodgemusic_start(1);
     getgamefiles();
     return 0;
 }
@@ -553,13 +560,13 @@ void getgamefiles()
 {
     char *gamescreenadr, *blokeadr_load, *exploadr_load;
 
-   load1:
+   //load1:
     loadhammered_game(&gamescreenadr, gamescreenpath, resourcepath);
     initialize_gamescreen(gamescreenadr);
-   load2:
+   //load2:
     int blokelen = loadhammered_game(&blokeadr_load, blokepath, resourcepath);
     initialize_sprites(blokeadr_load, blokeadr, 77, blokeadr_load+blokelen);
-   load3:
+   //load3:
     int explolen = loadhammered_game(&exploadr_load, explopath, resourcepath);
     initialize_sprites(exploadr_load, exploadr, 32, exploadr_load+explolen);
 }
@@ -574,11 +581,11 @@ void getlevelsprites()
     case 4: currentpath = psychepath /*XXX*/; break;
     default: currentpath = egopath;
     }
-   load4:
+   //load4:
     int blocklen = loadhammered_level(&blockadr_load, blockpath, currentpath);
     initialize_sprites(blockadr_load, blockadr, 256, blockadr_load+blocklen);
 
-   load5:
+   //load5:
     int alienlen = loadhammered_level(&alienadr_load, alienpath, currentpath);
     initialize_sprites(alienadr_load, alspradr, 256, alienadr_load+alienlen);
 }
@@ -595,12 +602,12 @@ int getlevelfiles()
     }
     getlevelsprites();
 
-   load6:
+   //load6:
     loadhammered_level((char**)&brainadr, boardpath, currentpath);
     boardadr = brainadr;
 // hack: fix endianness
-    boardadr->width = read_littleendian((uint32_t*)&boardadr->width);
-    boardadr->height = read_littleendian((uint32_t*)&boardadr->height);
+    boardadr->width = read_littleendian_w((uint32_t*)&boardadr->width);
+    boardadr->height = read_littleendian_w((uint32_t*)&boardadr->height);
 
     loadhammered_level(&backadr, backpath, currentpath);
 
@@ -626,9 +633,9 @@ int getlevelfiles()
 
 int retrievebackdrop()
 {
-    char* r9 = currentpath;
+    //char* r9 = currentpath;
 
-   load10:
+   //load10:
     loadhammered_level(&backadr, backpath, currentpath);
     return 0;
 }
@@ -637,28 +644,30 @@ int getneuronfiles(int plzone)
 {
 
 //STR R10,[R12,#backadr]
-   load8:
+   //load8:
     loadhammered_level(&backadr, neuronbackpath, currentpath);
     while (1)
     {
-       neuronloadloop:
+       //neuronloadloop:
         *neuronnumber = '0'+plzone;
-        if (filelength(neuronpath, currentpath)) break;
-        if (--plzone == 0) noneuronshere: return 0;
+        if (filelength_alt(neuronpath, currentpath)) break;
+        if (--plzone == 0)
+           //noneuronshere:
+            return 0;
     }
-   load9:
+   //load9:
     loadhammered_level((char**)&neuronadr, neuronpath, currentpath);
     boardadr = neuronadr;
 // hack: fix endianness
-    boardadr->width = read_littleendian((uint32_t*)&boardadr->width);
-    boardadr->height = read_littleendian((uint32_t*)&boardadr->height);
+    boardadr->width = read_littleendian_w((uint32_t*)&boardadr->width);
+    boardadr->height = read_littleendian_w((uint32_t*)&boardadr->height);
     return plzone;
 }
 
 char config_keywords[16][12] =
 { "LeftKeysym",    "RightKeysym", "UpKeysym",   "DownKeysym", "FireKeysym",
   "SoundType",   "SoundQ",      "FullScreen",
-  "OpenGL", "ScreenSize", "ScreenScale",
+  "ARM3", "ScreenSize", "ScreenScale",
   "SoundVolume", "MusicVolume", "MentalZone", "Initials",   "You" };
 
 char idpermitstring[] = "You are now permitted to play the ID!!!\n";
@@ -698,7 +707,7 @@ void loadconfig()
             case 5: options.soundtype = temp; break;
                 //case 6: options.soundquality=temp; break;
             case 7: options.fullscreen = temp; break;
-            case 8: options.opengl = temp; break;
+            case 8: options.arm3 = temp; break;
             case 9: options.size = temp; break;
             case 10: options.scale = temp; break;
             case 11: options.soundvol = temp; break;
@@ -708,7 +717,7 @@ void loadconfig()
         }
         fclose(r0);
     }
-   findoutid:;
+   //findoutid:;
     if (!options.idpermit) if (options.mentalzone > 2) options.mentalzone = 2;
     //int idp=swi_osfile(5,options.idpermitpath,NULL,NULL);
     //options.idpermit=(idp==1)?1:0;
@@ -729,7 +738,7 @@ void saveconfig()
             config_keywords[5], options.soundtype,
             //config_keywords[6], options.soundquality,
             config_keywords[7], options.fullscreen,
-            config_keywords[8], options.opengl,
+            config_keywords[8], options.arm3,
             config_keywords[9], options.size,
             config_keywords[10], options.scale,
             config_keywords[11], options.soundvol,
@@ -769,6 +778,7 @@ void loadgame()
     fclose(r0);
     backprep(backadr);
     boardreg();
+    initweapon();
     reinitplayer();
 }
 

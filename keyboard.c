@@ -21,11 +21,7 @@ extern asylum_options options;
 
 static char keyboard[512];
 static int keybuf;
-static int unibuf;
 static int mouse;
-static int exposed;
-
-#define ESC_VALUE 27
 
 
 void init_keyboard()
@@ -33,20 +29,23 @@ void init_keyboard()
     for (int i = 0; i < 512; i++) keyboard[i] = 0;
 }
 
+/*
 void swi_removecursors()
 {
     ;
 }
+*/
+
 int swi_readescapestate()
 {
-    return keyboard[ESC_VALUE];
+    return keyboard[SDL_SCANCODE_ESCAPE];
 }
 int readmousestate()
 {
     return mouse;
 }
 
-int osbyte_79(int c)
+int osbyte_79()
 {
     update_keyboard();
     int key = keybuf;
@@ -56,39 +55,25 @@ int osbyte_79(int c)
     return -1;
 }
 
-int osbyte_79_unicode(int c)
-{
-    update_keyboard();
-    int uni = unibuf;
-    unibuf = -1;
-    return uni;
-}
-
 int osbyte_7a()
 {
     update_keyboard(); for (int i = 0; i < 512; i++) if (keyboard[i]) return i;return -1;
 }
 void osbyte_7c()
 {
-    keyboard[ESC_VALUE] = 0;
+    keyboard[SDL_SCANCODE_ESCAPE] = 0;
 }
 
 int osbyte_81(int c)
 {
-    if (c >= 0) return osbyte_79(c);
+    if (c >= 0) return osbyte_79();
     update_keyboard();
     return keyboard[-c];
 }
 
-char swi_oscrc(int w, char* start, char* end, int bytes)
+char swi_oscrc()
 {
     return 0xff;
-}
-
-
-int swi_joystick_read(int a, int* x, int* y)
-{
-    ;
 }
 
 void update_keyboard()
@@ -104,16 +89,19 @@ void update_keyboard()
         {
         case SDL_KEYDOWN:
             ke = (SDL_KeyboardEvent*)&e;
-            keyboard[ke->keysym.sym] = 0xff;
-            keybuf = ke->keysym.sym;
-            if (ke->keysym.unicode)
-                unibuf = ke->keysym.unicode;
-            else
-                unibuf = -1;
+
+            if (ke->keysym.scancode <= 512) {
+                keyboard[ke->keysym.scancode] = 0xff;
+                keybuf = ke->keysym.scancode;
+            }
+
             break;
         case SDL_KEYUP:
             ke = (SDL_KeyboardEvent*)&e;
-            keyboard[ke->keysym.sym] = 0;
+
+            if (ke->keysym.scancode <= 512)
+                keyboard[ke->keysym.scancode] = 0;
+
             break;
         case SDL_MOUSEBUTTONDOWN:
             me = (SDL_MouseButtonEvent*)&e;
@@ -133,9 +121,6 @@ void update_keyboard()
             case SDL_BUTTON_RIGHT: mouse &= ~1; break;
             }
             break;
-        case SDL_VIDEOEXPOSE:
-            exposed = 1;
-            break;
         case SDL_QUIT:
             exithandler();
             break;
@@ -145,7 +130,7 @@ void update_keyboard()
 
 void zonecheatread(int* zone)
 {
-    char r1 = osbyte_79_unicode(0); // was _81(0)
+    char r1 = osbyte_79(); // was _81(0)
 
     if ((r1 < 48) || (r1 > 56)) return;
     *zone = r1-48;
@@ -164,39 +149,7 @@ void keyread(key_state* ks)
 {
     int r4 = -1;
 
-    if (options.joyno)
-    {
-        int r0, r1;
-        int v = swi_joystick_read(options.joyno-1, &r0, &r1);
-        if (v)
-        {
-           nostickerr:
-            message(32, 32, 0, 1, "Can't see a joystick!");
-            r4 = -1;
-            options.joyno = 0;
-        }
-        else
-            r4 = -1;
-/*
-   MOV R1,R0,ASL #24
-   CMN R1,#32<<24
-   BICLT R4,R4,#8; down
-   CMP R1,#32<<24
-   BICGT R4,R4,#4; up
-   BIC R0,R0,#&FF
-   MOV R1,R0,ASL #16
-   CMN R1,#32<<24
-   BICLT R4,R4,#1; left
-   CMP R1,#32<<24
-   BICGT R4,R4,#2; right
-
-   TST R0,#1<<16
-   BICNE R4,R4,#16; fire
-   TST R0,#1<<17
-   BICNE R4,R4,#4; up on fire button 2
- */
-    }
-   nojoystick:
+   //nojoystick:
     if ((osbyte_81(options.leftkey) == 0xff) || !(r4&1)) 
       { if (++ks->leftpress == 0) ks->leftpress = 0xff;}
     else ks->leftpress = 0;
@@ -219,7 +172,5 @@ void keyread(key_state* ks)
 
 int need_redraw()
 {
-    int e = exposed;
-    exposed = 0;
-    return e;
+    return 0;
 }

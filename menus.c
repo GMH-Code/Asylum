@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 
 #include "asylum.h"
 
@@ -24,17 +24,18 @@ extern fastspr_sprite charsadr[48];
 extern char sound_available;
 extern asylum_options options;
 extern char plscore[8];
+extern char frameinc;
 
 char highscorearea[13*5+1];           //=&D000
 char hstindex;
 
 int escapehandler()
 {
-    //frameinc = 1;
+    frameinc = 1;
     showchatscreen();
     swi_fastspr_clearwindow();
     wipetexttab();
-    message(36, 40-256, 0, 4, "¤ Game Interrupted ¤");
+    message(36, 40-256, 0, 4, "- Game Interrupted -");
     message(32-256, 72, 4, 0, "Please select action");
     message(46+256, 104, -4, 0, "ESC - Abandon game");
     message(40-256, 136, 4, 0, "Q    - lose this life");
@@ -44,8 +45,8 @@ int escapehandler()
     osbyte_7c(); //clear escape
     for (int r9 = 64; swi_readescapestate() == 0;)
     {
-       loopb8:
-        swi_blitz_wait(0);
+       //loopb8:
+        swi_blitz_wait(1);
         if (r9 != 0)
         {
             r9--;
@@ -58,15 +59,15 @@ int escapehandler()
             showchatscreen();
             showtext();
         }
-        switch (osbyte_79_unicode(1))
+        switch (osbyte_79())
         {
-            case 'q': case 'Q':
+            case SDL_SCANCODE_Q:
                 loselife();
                 return 0;
-            case 'o': case 'O':
+            case SDL_SCANCODE_O:
                 adjustopt();
                 return 0;
-            case 'r': case 'R':
+            case SDL_SCANCODE_R:
                 rejoin();
                 return 0;
         }
@@ -106,8 +107,11 @@ int options_menu(int gameon)
         swi_blitz_wait(20); //
         switch (readopt((gameon == 0) ? 3 : 3))
         {
-        case -1: optionexit: return 1;
-        case  1: choosecontrol(); dosaveconf(); break;
+        case -1:
+           //optionexit:
+            return 1;
+        //case  1: choosecontrol(); dosaveconf(); break;
+        case  1: choosekeys(); dosaveconf(); break;
         case  2: tunegame(); dosaveconf(); break;
         case  3: if (gameon == 0)
             {
@@ -147,28 +151,29 @@ void getzone()
     showtext();
     r0 = readopt(r0);
     if (r0 == -1) return;
-    if ((r0 == 3) && ( /*testid:*/ options.idpermit != 1))
-    {
-        wipetexttab();
-        showchatscreen();
-        message(80, 100, 0, 0, "To play the id");
-        message(32, 128, 0, 0, "you need to complete");
-        message(80, 156, 0, 0, "the ego first.");
-        showtext();
-        readopt(0);
-    }
+    //if ((r0 == 3) && ( /*testid:*/ options.idpermit != 1))
+    //{
+    //    wipetexttab();
+    //    showchatscreen();
+    //    message(80, 100, 0, 0, "To play the id");
+    //    message(32, 128, 0, 0, "you need to complete");
+    //    message(80, 156, 0, 0, "the ego first.");
+    //    showtext();
+    //    readopt(0);
+    //}
     else options.mentalzone = r0;
 }
 
 void completedzone()
 {
-   completedzone:
+   //completedzone:
     message(114, 64, 0, 0, "WELL DONE!");
     message(44, 96, 0, 0, "You have completed");
     if (options.mentalzone == 3) message(114, 128, 0, 0, "The game!!!");
     else message(114, 128, 0, 0, "This zone!");
 }
 
+/*
 void choosecontrol()
 {
     wipetexttab();
@@ -184,6 +189,7 @@ void choosecontrol()
     case  2: choosestick(); return;
     }
 }
+*/
 
 void choosekeys()
 {
@@ -196,6 +202,7 @@ void choosekeys()
     options.firekey = selectkey(48, 128, 0, 0, "Press Key to Fire");
 }
 
+/*
 void choosestick()
 {
     wipetexttab();
@@ -217,7 +224,7 @@ void choosestick()
     showtext();
     (void)readopt(9);
 }
-
+*/
 
 void tunegame()
 {
@@ -262,16 +269,17 @@ char sound1[] = "-1. No Sound";
 char sound2[] = "-2. 4 Channels";
 char sound3[] = "-3. 4 Channels";
 char sound4[] = "-4. 8 Channels";
-char sound5[] = "-5. Normal Quality";
-char sound6[] = "-6. High Quality";
-char sound7[] = "-7. Overdrive";
+//char sound5[] = "-5. Normal Quality";
+//char sound6[] = "-6. High Quality";
+//char sound7[] = "-7. Overdrive";
 
 void tunesound()
 {
     showchatscreen();
-    for (;; /*tunesoundloop:*/ soundupdate(), swi_stasis_link(1, 1), swi_sound_control(1, -15, 0x20, 0xfe))
+    //for (;; /*tunesoundloop:*/ soundupdate(), swi_stasis_link(1, 1), swi_sound_control(1, -15, 0x20, 0xfe))
+    for (;; /*tunesoundloop:*/ soundupdate())
     {
-       tunesoundins:
+       //tunesoundins:
         wipetexttab();
         soundfillin();
         message(96, 32, 0, 0, "Tune Sound");
@@ -280,11 +288,11 @@ void tunesound()
         message(32, 100, 0, 0, sound3);
         message(80, 120, 0, 0, "and music");
         message(32, 140, 0, 0, sound4);
-        message(32, 160, 0, 0, sound5);
-        message(32, 180, 0, 0, sound6);
-        message(32, 200, 0, 0, sound7);
+        //message(32, 160, 0, 0, sound5);
+        //message(32, 180, 0, 0, sound6);
+        //message(32, 200, 0, 0, sound7);
         message(96, 220, 0, 0, "ESC - Exit");
-        swi_blitz_wait(0);
+        swi_blitz_wait(1);
         swi_fastspr_clearwindow();
         showtext();
 
@@ -294,9 +302,9 @@ void tunesound()
         case 2: options.soundtype = 1; break;
         case 3: options.soundtype = 2; break;
         case 4: options.soundtype = 3; break;
-        case 5: options.soundquality &= ~1; break;
-        case 6: options.soundquality |= 1; break;
-        case 7: options.soundquality ^= 2; break;
+        //case 5: options.soundquality &= ~1; break;
+        //case 6: options.soundquality |= 1; break;
+        //case 7: options.soundquality ^= 2; break;
         default: return;
         }
     }
@@ -308,33 +316,34 @@ void soundfillin()
     sound2[0] = (options.soundtype == 1) ? 16 : 17;
     sound3[0] = (options.soundtype == 2) ? 16 : 17;
     sound4[0] = (options.soundtype == 3) ? 16 : 17;
-    sound5[0] = (options.soundquality&1) ? 17 : 16;
-    sound6[0] = (options.soundquality&1) ? 16 : 17;
-    sound7[0] = (options.soundquality&2) ? 16 : 17;
+    //sound5[0] = (options.soundquality&1) ? 17 : 16;
+    //sound6[0] = (options.soundquality&1) ? 16 : 17;
+    //sound7[0] = (options.soundquality&2) ? 16 : 17;
 }
 
-char tunevol1[] = "-5. Speaker on";
+//char tunevol1[] = "-5. Speaker on";
 
 void tunevolume()
 {
     showchatscreen();
     wipetexttab();
-    if (sound_available && (options.soundtype == 2)) swi_bodgemusic_start(1, 0);
+    if (sound_available && (options.soundtype == 2)) swi_bodgemusic_start(1);
     swi_bodgemusic_volume(options.musicvol);
     message(80, 32, 0, 0, "Change volume");
     message(48, 96, 0, 0, "1. Louder effects");
     message(48, 116, 0, 0, "2. Quieter effects");
     message(48, 136, 0, 0, "3. Louder music");
     message(48, 156, 0, 0, "4. Quieter music");
-    message(48-14, 176, 0, 0, tunevol1);
+    //message(48-14, 176, 0, 0, tunevol1);
     message(96, 220, 0, 0, "ESC - Exit");
     do
     {
-       tunevolumeloop:
+       //tunevolumeloop:
         swi_bodgemusic_volume(options.musicvol);
-        if (swi_sound_speaker(0)) *tunevol1 = 17;
-        else *tunevol1 = 16;
-        swi_blitz_wait(0);
+        //if (swi_sound_speaker(0)) *tunevol1 = 17;
+        //else
+        //*tunevol1 = 16;
+        swi_blitz_wait(1);
         swi_fastspr_clearwindow();
         showtext();
         int r0 = readopt(5);
@@ -343,42 +352,43 @@ void tunevolume()
         if (r0 == 1)
         {
             if (options.soundvol < 0x40) options.soundvol = options.soundvol*2+1;
-	    maketestsound(options.soundvol);
+	    //maketestsound(options.soundvol);
 	    continue;
         }
         if (r0 == 2)
         {
             if (options.soundvol > 0) options.soundvol = (options.soundvol-1)/2;
-	    maketestsound(options.soundvol);
+	    //maketestsound(options.soundvol);
 	    continue;
         }
         if (r0 == 3)
         {
             if (options.musicvol < 0x40) options.musicvol = options.musicvol*2+1;
-	    maketestsound(options.musicvol);
+	    //maketestsound(options.musicvol);
 	    continue;
         }
         if (r0 == 4)
         {
             if (options.musicvol > 0) options.musicvol = (options.musicvol-1)/2;
-	    maketestsound(options.musicvol);
+	    //maketestsound(options.musicvol);
 	    continue;
         }
 
         if (r0 != 5) return;
-        swi_sound_speaker(3-swi_sound_speaker(0));
+        //swi_sound_speaker(3-swi_sound_speaker(0));
     }
     while (1);
 }
 
 
 char speed1[] = "-1. Full Screen";
-char speed2[] = "-2. Use OpenGL";
-char speed3[] = "-4. Half scale";
-char sizedesc[][16] = {" 3.  320 x  256",
-		       " 3.  640 x  512",
-		       " 3.  960 x  768",
-		       " 3. 1280 x 1024"};
+char speed2[] = "-3. Half Scale";
+char speed3[] = "-4. High Frame Rate";
+char sizedesc[][16] = {"-2.  320 x  256",
+		       "-2.  640 x  512",
+		       "-2.  960 x  768",
+		       "-2. 1280 x 1024",
+               "-2. 1600 x 1280"};
 
 void tunespeed()
 {
@@ -387,26 +397,23 @@ void tunespeed()
         showchatscreen();
         do
         {
-           tunespeedloop:
+           //tunespeedloop:
             wipetexttab();
             if (options.fullscreen == 1) speed1[0] = 16;
             else speed1[0] = 17;
-            if (options.opengl == 1) speed2[0] = 16;
+            if (options.scale == 2) speed2[0] = 16;
             else speed2[0] = 17;
-            if (options.scale == 2) speed3[0] = 16;
+            if (options.arm3 == 1) speed3[0] = 16;
             else speed3[0] = 17;
             message(96, 48, 0, 0, "Tune Video");
             message(32, 96, 0, 0, speed1);
-            message(32, 120, 0, 0, speed2);
-	    if (options.opengl)
-	    {
-		message(32, 144, 0, 0, sizedesc[options.size&3]);
-		message(32, 168, 0, 0, speed3);
-		message(80, 188, 0, 0, "-experimental-");
-	    }
+            message(32, 120, 0, 0, sizedesc[options.size % 5]);
+            message(32, 144, 0, 0, speed2);
+            message(80, 168, 0, 0, "-Experimental-");
+            message(32, 192, 0, 0, speed3);
             message(96, 220, 0, 0, "ESC - Exit");
 
-            swi_blitz_wait(0);
+            swi_blitz_wait(1);
             swi_fastspr_clearwindow();
             showtext();
             int r0 = readopt(4);
@@ -418,31 +425,22 @@ void tunespeed()
             }
             else if (r0 == 2)
             {
-                options.opengl ^= 1;
-		if (options.opengl == 0)
-		{
-		    options.size = 0;
-		    options.scale = 1;
-		}
+                options.size = (options.size+1) % 5;
 		vduread(options);
 		getvitalfiles();
 		getgamefiles();
 		getlevelsprites();
 		break;
             }
-	    else if (options.opengl == 0);
             else if (r0 == 3)
             {
-                options.size = (options.size+1) % 4;
-		vduread(options);
-		getvitalfiles();
-		getgamefiles();
-		getlevelsprites();
-		break;
+                options.scale ^= 3;
+		vduread(options); break;
             }
             else if (r0 == 4)
             {
-                options.scale ^= 3;
+                options.arm3 ^= 1;
+                checkifarm3();
 		vduread(options); break;
             }
         }
@@ -469,7 +467,7 @@ int selectkey(int x, int y, int xv, int yv, const char* a)
         }
         swi_blitz_wait(1);
     }
-    while ((r1 = osbyte_79(0)) == -1); // scan keyboard
+    while ((r1 = osbyte_79()) == -1); // scan keyboard
     if (swi_readescapestate()) return 0;
     return -r1;                        // and r4 (?)
 }
@@ -480,23 +478,19 @@ int readopt(int maxopt)
 
     for (;;)
     {
-       keyloop:
-        if (options.joyno != 0)
-        {
-            swi_joystick_read(options.joyno-1, NULL, NULL);
-// MOVVS R0,#0
-//if (r0&(1<<16)) {/*optfire:*/ return 0;}
-        }
-       nooptstick:
-        r1 = osbyte_79_unicode(1); // read key in time limit
+       //keyloop:
+       //nooptstick:
+        r1 = osbyte_79(); // read key in time limit
         if (swi_readescapestate())
         {
-           optescape:
+           //optescape:
             osbyte_7c(); // clear escape
             return -1;
         }
-        if (r1 >= '0' && r1 <= '0' + maxopt)
-            return r1 - '0';
+        if (r1 == SDL_SCANCODE_0)
+            return r1 - SDL_SCANCODE_0;
+        if (r1 >= SDL_SCANCODE_1 && r1 <= (SDL_SCANCODE_1 + maxopt - 1))
+            return r1 - SDL_SCANCODE_1 + 1;
         if (osbyte_81(options.firekey) == 0xff)
             return 0;
         if (need_redraw())
@@ -537,7 +531,7 @@ int prelude()
     showtext();
     for (int scroll = 256+8; swi_readescapestate() == 0;)
     {
-       loope0:
+       //loope0:
         swi_blitz_wait(2);
         if (scroll != 0)
         {
@@ -551,16 +545,16 @@ int prelude()
             showchatscreen();
             showtext();
         }
-       preludetextstop:;
+       //preludetextstop:;
         int r1 = osbyte_7a();
         if ((r1 != -1) && (r1 != 307) && (r1 != 308)) // escape
-           endprelude:
+           //endprelude:
             return cheatpermit;
         if (readmousestate()&2)
         {
-           gocheat:
-            if (osbyte_81(-SDLK_LALT) != 0xff) return cheatpermit;
-            if (osbyte_81(-SDLK_RALT) != 0xff && osbyte_81(-SDLK_MODE) != 0xff) return cheatpermit;
+           //gocheat:
+            if (osbyte_81(-SDL_SCANCODE_LALT) != 0xff) return cheatpermit;
+            if (osbyte_81(-SDL_SCANCODE_RALT) != 0xff && osbyte_81(-SDL_SCANCODE_MODE) != 0xff) return cheatpermit;
             cheatpermit = 1;
             scroll = 1024;
         }
@@ -659,13 +653,13 @@ void showerrorok()
 int errorwait()
 {
     if (osbyte_81(-74) != 0xff)
-       loopb9:
+       //loopb9:
         while (osbyte_81(-61) != 0xff)
             if (swi_readescapestate())
             {
                 wipetexttab(); return 0;
             }
-   waitover:
+   //waitover:
     wipetexttab();
     return 1;
 }
@@ -678,10 +672,11 @@ void setdefaultscores()
 
     for (int r3 = 5; r3 > 0; r3--)
     {
-       loopd4:;
+       //loopd4:;
         const char* r11 = defscore;
         for (int r2 = 13; r2 > 0; r2--)
-           loopd5: *(r10++) = *(r11++);
+           //loopd5:
+            *(r10++) = *(r11++);
     }
 }
 
@@ -704,11 +699,11 @@ void updatehst()
     r10 += 4*13; //4*entry length
     while (comparescore(r10))
     {
-       loopd1:
+       //loopd1:
         r10 -= 13; //entry length
         if (--hstindex == 0) break;
     }
-   lessthan:
+   //lessthan:
     r10 += 13; //entry length
     if (hstindex != 5)
     {
@@ -717,14 +712,14 @@ void updatehst()
             char* r9;
             int r3;
             for (r9 = highscorearea+4*13-1, r3 = 13*(4-hstindex); r3 > 0; r9--, r3--)
-               loopd7:
+               //loopd7:
                 r9[13] = *r9;
         }
-       noshiftscore:;
+       //noshiftscore:;
 
         char* r11 = plscore;
         for (int r3 = 8; r3 > 0; r3--)
-           loopda:
+           //loopda:
             *(r10++) = *(r11++)+'0';
 
         r10++;
@@ -736,7 +731,7 @@ void updatehst()
         {
             while (osbyte_81(0) != -options.firekey)
             {
-               scorekeyloop:
+               //scorekeyloop:
 //if (--r9<0) goto scoreexit;
                 keyread(&ks);
                 if (ks.leftpress == 0)
@@ -753,16 +748,16 @@ void updatehst()
                 swi_blitz_wait(4);
             }
             options.initials[3-r8] = *r10;
-            swi_stasis_link(1, 18);
-            swi_stasis_volslide(1, 0, 0);
-            swi_sound_control(1, 0x17c, 140, 0);
+            //swi_stasis_link(1, 18);
+            //swi_stasis_volslide(1, 0, 0);
+            //swi_sound_control(1, 0x17c, 140, 0);
             /*if (r8>1)*/ swi_blitz_wait(20);
         }
-       scoreexit:
+       //scoreexit:
         savescores(highscorearea, options.mentalzone);
         dosaveconf();
     }
-   notontable:;
+   //notontable:;
 }
 
 
@@ -772,18 +767,20 @@ int comparescore(char* r10)
 
     for (int r3 = 8; r3 > 0; r3--)
     {
-       loopd0:
-        if (*r10-'0' < *r11) scoregreater: return 1;
-        else if (*r10-'0' > *r11) scoreless: return 0;
+       //loopd0:
+        if (*r10-'0' < *r11) //scoregreater:
+            return 1;
+        else if (*r10-'0' > *r11) //scoreless:
+            return 0;
         r10++; r11++;
-       compnext:;
+       //compnext:;
     }
     return 1;
 }
 
 void showhst()
 {
-    swi_blitz_wait(0);
+    swi_blitz_wait(1);
     switchbank();
     showchatscores();
     wipetexttab();

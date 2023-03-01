@@ -4,7 +4,7 @@ char *get_exe_path(char *buf, int bufsize)
 {
 	char *p;
 	GetModuleFileName(NULL, buf, bufsize);
-	while (p = strchr(buf, '\\'))
+	while ((p = strchr(buf, '\\')))
 		*p = '/';
 	p = strrchr(buf, '/');
 	if (p)

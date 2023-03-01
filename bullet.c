@@ -67,9 +67,9 @@ void bullets()  // the bullet handler (aliens fire these)
 
     for (i = _bulno; i > 0; i--, r11++)
     {
-       loop71:
+       //loop71:
         if (r11->type == 0) continue;
-       foundbul:
+       //foundbul:
 
         r11->x += r11->dx;  r11->y += r11->dy;
 
@@ -86,7 +86,7 @@ void bullets()  // the bullet handler (aliens fire these)
                 r11->dx += (r11->dx>>4);
                 r11->dy += (r11->dy>>4);
             }
-       bulnoacc:
+       //bulnoacc:
 
 
         if ((r11->flags&BULL_HOME) && (r11->flags <= (3<<6)*BULL_TTL))
@@ -101,7 +101,7 @@ void bullets()  // the bullet handler (aliens fire these)
             r11->dx += (r11->x < xpos) ? r6 : -r6;
             r11->dy += (r11->y < ypos) ? r6 : -r6;
         }
-       bulnohome:
+       //bulnohome:
 
         if (r11->dx > _speedlim) r11->dx = _speedlim;
         if (r11->dx < -_speedlim) r11->dx = -_speedlim;
@@ -122,7 +122,7 @@ void bullets()  // the bullet handler (aliens fire these)
         if (!((r11->x <= pllx) || (plhx <= r11->x) || (r11->y <= plly) || (plhy <= r11->y)))
         {
             // goto bulletkill;
-           bulletkill:
+           //bulletkill:
             r11->type = 0;
             // goto causeexplobullet;
             int DX = r11->dx>>4, DY = r11->dy>>4;
@@ -139,7 +139,7 @@ void bullets()  // the bullet handler (aliens fire these)
                 ;
             else
             {
-               bulhitins:
+               //bulhitins:
 
                 if (masterplotal == 0) continue;
 
@@ -150,9 +150,9 @@ void bullets()  // the bullet handler (aliens fire these)
                 continue;
             }
         }
-       nobultarget:
+       //nobultarget:
         r11->type = 0;
-       bulnodestroy:
+       //bulnodestroy:
         if ((r11->flags&BULL_EXPLO) != 0)
         {
 // causeexplobullet:
@@ -161,14 +161,14 @@ void bullets()  // the bullet handler (aliens fire these)
             explogonopyro(r11->x-r11->dx, r11->y-(8<<8)-r11->dy, DX-DY, DX+DY, DX-DY, 0, 0);
             continue;
         }
-       buldestroy:
+       //buldestroy:
         if ((r11->flags&BULL_SPLIT) == 0)
         {
             r11->type = 0;
             continue;
         }
        bulsplit:;
-        int newtype = (random()&7);
+        int newtype = (rand()&7);
         if (newtype == 7) newtype = 0;
         int r7 = r11->type;
         if (r7 == _bulspritebase+13) newtype = 7;
@@ -177,7 +177,7 @@ void bullets()  // the bullet handler (aliens fire these)
         if (newtype == 15) newtype = 0;
 
         for (int i = 0; i < 14; i += 2)
-           loop75:
+           //loop75:
             (void)makebul(r11->x, r11->y, (r11->dx>>2)+splittab[i], (r11->dy>>2)+splittab[i+1], newtype, (1<<6)*BULL_TTL);
         r11->type = 0;
     }
@@ -192,7 +192,7 @@ int makebul(int x, int y, int dx, int dy, int type, int flags)
     type += _bulspritebase;
     r10 += bulctr;
     for (i = bulctr; i < _bulno; i++, r10++)
-       loop72:
+       //loop72:
         if (r10->type == 0)
         {
             bulctr = i; break;
@@ -201,14 +201,14 @@ int makebul(int x, int y, int dx, int dy, int type, int flags)
     {
         r10 = buladr;
         for (i = 0; i < bulctr; i++, r10++)
-           loop69:
+           //loop69:
             if (r10->type == 0)
             {
                 bulctr = i; break;
             }
         if (i == bulctr) return 1; // failed
     }
-   foundmakebul:
+   //foundmakebul:
 
     if (flags < BULL_TTL) flags |= (1<<6)*BULL_TTL;
     if (type >= _bulspritebase+8) flags |= BULL_SLOWHOME|BULL_EXPLO;
@@ -240,7 +240,7 @@ int makebul(int x, int y, int dx, int dy, int type, int flags)
                     (type>_bulspritebase+8)?CHUNK_BULLET_3:(type==_bulspritebase+8)?CHUNK_BULLET_2:CHUNK_BULLET_1);
 
     }
-   nozapsound:;
+   //nozapsound:;
     return 0;
 }
 
@@ -251,7 +251,7 @@ void initbultab()
     bulctr = 0;
     for (int r9 = _bulno; r9 > 0; r9--)
     {
-       loop74:
+       //loop74:
         *(int*)r10 = 0;
         r10++;
     }

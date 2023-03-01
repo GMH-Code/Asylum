@@ -29,8 +29,9 @@ char storage[STOREAREALEN];
 
 //const char idpermitpath[]="<PsychoResource$Path>Idpermit";
 
-static char resource_path[240];
-static char score_path[240];
+static char resource_path[PATH_MAX];
+static char score_path[PATH_MAX];
+static char config_path[PATH_MAX];
 
 char configname[] = "/.asylum"; //"<PsychoResource$Path>Config";
 char savegamename[] = "/.asylum_game";
@@ -44,13 +45,19 @@ FILE* score_file[4];
 
 FILE* find_game(int op)
 {
-    char fullname[240] = "";
+    char fullname[PATH_MAX] = "";
 
+#ifdef _WIN32
+    strcpy(fullname, config_path);
+#else
     char* home = getenv("HOME");
+
     if (home)
-	strcat(fullname, home);
+	    strcat(fullname, home);
     else
-	return NULL;
+	    return NULL;
+#endif
+
     strcat(fullname, savegamename);
     switch (op)
     {
@@ -63,13 +70,19 @@ FILE* find_game(int op)
 
 FILE* find_config(int op)
 {
-    char fullname[240] = "";
+    char fullname[PATH_MAX] = "";
 
+#ifdef _WIN32
+    strcat(fullname, config_path);
+#else
     char* home = getenv("HOME");
+
     if (home)
-	strcat(fullname, home);
+	    strcat(fullname, home);
     else
-	strcat(fullname, resource_path);
+	    strcat(fullname, resource_path);
+#endif
+
     strcat(fullname, configname);
     switch (op)
     {
@@ -88,14 +101,14 @@ void dropprivs()
 #endif
 }
 
-uint32_t read_littleendian(uint8_t* bytes)
+uint32_t read_littleendian_b(uint8_t* bytes)
 {
     return (*bytes)|(bytes[1]<<8)|(bytes[2]<<16)|(bytes[3]<<24);
 }
 
-uint32_t read_littleendian(uint32_t* word)
+uint32_t read_littleendian_w(uint32_t* word)
 {
-    return read_littleendian((uint8_t*)word);
+    return read_littleendian_b((uint8_t*)word);
 }
 
 void write_littleendian(uint8_t* bytes, uint32_t word)
@@ -136,7 +149,7 @@ int loadhammered_level(char** spaceptr, char* r1, char* path)
 int loadvitalfile(char** spaceptr, char* r1, char* path)
 {
 // if VS or if r0==1
-    char fullname[240] = "";
+    char fullname[PATH_MAX] = "";
 
     strcat(fullname, path);
     strcat(fullname, r1);
@@ -171,8 +184,8 @@ int loadhammered(char** spaceptr, char* r1, char* path)
 
 int loadfile(char** spaceptr, char* r1, char* path)
 {
-    int r4 = filelength(r1, path);
-    char fullname[240] = "";
+    int r4 = filelength_alt(r1, path);
+    char fullname[PATH_MAX] = "";
     // hack: +4 as feof doesn't trigger until we've passed the end
     *spaceptr = (char*)malloc(r4+4);
 
@@ -200,6 +213,7 @@ void set_paths()
     {
         strcpy(resource_path, RESOURCEPATH);
         strcpy(score_path, SCOREPATH);
+        strcpy(config_path, CONFIGPATH);
         /* We could fall back to ~/.asylum/ if SCOREPATH is not writable.
            However just assuming the current directory is ok is not cool. */
         return;
@@ -209,7 +223,7 @@ void set_paths()
     fprintf(stderr, "Running as uninstalled, looking for files in local directory.\n");
 
 #ifdef HAVE_GET_EXE_PATH
-    char exe_path[240];
+    char exe_path[PATH_MAX];
     if (get_exe_path(exe_path, sizeof(exe_path)))
     {
         strcpy(resource_path, exe_path);
@@ -217,12 +231,16 @@ void set_paths()
 
         strcpy(score_path, exe_path);
         strcat(score_path, "/hiscores");
+
+        strcpy(config_path, exe_path);
+        strcat(config_path, "/config");
         return;
     }
 #endif
 
     strcpy(resource_path, "data");
     strcpy(score_path, "../hiscores"); /* relative to resource_path */
+    strcpy(config_path, "../config"); /* relative to resource_path */
 }
 
 void open_scores()
@@ -263,7 +281,7 @@ void find_resources()
 
 void savescores(char* highscorearea, int mentalzone)
 {
-    highscorearea[13*5] = swi_oscrc(0, highscorearea, highscorearea+13*5, 1);
+    highscorearea[13*5] = swi_oscrc();
     if (mentalzone >= 1 && mentalzone <= 4 && score_file[mentalzone - 1] != NULL)
     {
         FILE * f = score_file[mentalzone - 1];
@@ -280,7 +298,7 @@ void loadscores(char* highscorearea, int mentalzone)
         FILE * f = score_file[mentalzone - 1];
         fseek(f, 0, SEEK_SET);
         if (fread(highscorearea, 1, 13*5+1, f) == 13*5+1 &&
-            swi_oscrc(0, highscorearea, highscorearea+13*5, 1) == highscorearea[13*5])
+            swi_oscrc() == highscorearea[13*5])
         {
             return;
         }
@@ -288,9 +306,9 @@ void loadscores(char* highscorearea, int mentalzone)
     setdefaultscores();
 }
 
-int filelength(char* name, char* path)
+int filelength_alt(char* name, char* path)
 {
-    char fullname[240] = "";
+    char fullname[PATH_MAX] = "";
 
     strcat(fullname, path);
     strcat(fullname, name);
@@ -303,7 +321,7 @@ int filelength(char* name, char* path)
     return r4;
 }
 
-void swi_osgbpb(int op, FILE* f, char* start, char* end, int b)
+void swi_osgbpb(int op, FILE* f, char* start, char* end)
 {
     switch (op)
     {
@@ -347,11 +365,13 @@ int swi_osfile(int op, const char* name, char* start, char* end)
         fclose(f);
         return 0;
     }
+
+    return 0;
 }
 
 int swi_blitz_hammerop(int op, char* name, char* path, char* space)
 {
-    char fullname[240] = "";
+    char fullname[PATH_MAX] = "";
 
     strcat(fullname, path);
     strcat(fullname, name);

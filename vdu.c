@@ -15,11 +15,9 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 
 #include "asylum.h"
-#include <GL/gl.h>
-#include <GL/glu.h>
 #include <math.h>
 
 extern fastspr_sprite charsadr[48];
@@ -44,10 +42,12 @@ struct vduvar
     int strengthx; int strengthy;
     int strengthw; int strengthh;
     int bonusx; int bonusy; int bonush;
-    int opengl;
 } vduvar;
 
+SDL_Window* ArcWindow;
 SDL_Surface* ArcScreen;
+SDL_Texture* ArcTexture;
+SDL_Renderer* ArcRenderer;
 //SDL_Surface* GameScreen;
 //SDL_Surface* ChatScreen;
 fastspr_sprite GameScreen;
@@ -65,6 +65,10 @@ SDL_Rect clip;
 extern int framectr;
 extern char frameinc;
 
+Uint32 blitz_time;
+Uint32 last_blitz_time;
+int blitz_diff;
+
 typedef struct textinfo
 {
     int count; int x; int y; int dx; int dy;
@@ -76,45 +80,24 @@ void switchbank()
 {
     //osbyte_71();
     //swi_blitz_screenretrieve();
-    if (vduvar.opengl) SDL_GL_SwapBuffers();
-    else SDL_Flip(ArcScreen);
+    SDL_UpdateTexture(ArcTexture, NULL, ArcScreen->pixels, ArcScreen->pitch);
+    SDL_RenderClear(ArcRenderer);
+    SDL_RenderCopy(ArcRenderer, ArcTexture, NULL, NULL);
+    SDL_RenderPresent(ArcRenderer);
 }
 
 void fspplotscaled(fastspr_sprite* sprites, char n, float x, float y,
 		   float xs, float ys)
 {
-    fastspr_sprite sprite = sprites[(char)n];
+    fastspr_sprite sprite = sprites[(unsigned char)n];
     static SDL_Rect pos;
-    float w = sprite.w*xs, h = sprite.h*ys;
+    //float w = sprite.w*xs, h = sprite.h*ys;
     float posx = x-sprite.x*xs, posy = y-sprite.y*ys;
 
-
-    if (vduvar.opengl)
-    {
-	// This rescales as requested ...
-	if ((sprite.w==0) || (sprite.h==0)) return;
-	glBindTexture(GL_TEXTURE_2D, sprite.t);
-	glEnable(GL_TEXTURE_2D);
-	glEnable(GL_BLEND);
-	glColor4f(1,1,1,1);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glBegin(GL_TRIANGLE_STRIP);
-	glTexCoord2f(0.5/sprite.texw, 0.5/sprite.texh);
-	glVertex3f(posx-0.5*xs, posy-0.5*ys, 0.0);
-	glTexCoord2f((sprite.w+1.5)/sprite.texw, 0.5/sprite.texh);
-	glVertex3f(posx+w+0.5*xs, posy-0.5*ys, 0.0);
-	glTexCoord2f(0.5/sprite.texh, (sprite.h+1.5)/sprite.texh);
-	glVertex3f(posx-0.5*xs, posy+h+0.5*ys, 0.0);
-	glTexCoord2f((sprite.w+1.5)/sprite.texw, (sprite.h+1.5)/sprite.texh);
-	glVertex3f(posx+w+0.5*xs, posy+h+0.5*ys, 0.0);
-	glEnd();
-    }
-    else
-    {
-	// ... this doesn't.
 	pos.x = (int)posx;  pos.y = (int)posy;
+    //pos.w = (int)w;  pos.h = (int)h;
+    //SDL_BlitScaled(sprite.s, NULL, ArcScreen, &pos);
 	SDL_BlitSurface(sprite.s, NULL, ArcScreen, &pos);
-    }
 }
 
 void fspplot(fastspr_sprite* sprites, char n, int x, int y)
@@ -159,7 +142,7 @@ void cenplotdying(fastspr_sprite* sprites, char n, int x, int y, int r5)
                 if (fsphx > vduvar.gamex)
                     fspplot(sprites, n, fsplx-r8, fsphy+r8);
         }
-   nodyingtop:
+   //nodyingtop:
     fsphy = vduvar.gamey+vduvar.gameh;
     fsplx = vduvar.gamex;
     fsply = r2;
@@ -178,7 +161,7 @@ void cenplotdying(fastspr_sprite* sprites, char n, int x, int y, int r5)
                 if (fsphx > fsplx)
                     fspplot(sprites, n, fsplx-r8, fsply-r8);
         }
-   nodyingbot:
+   //nodyingbot:
     writeclip();
 }
 
@@ -239,12 +222,12 @@ void message(int x, int y, float xv, float yv, const char* a)
         int r9;
         for (r9 = _textno; r9 > 0; r9--)
         {
-           loopa8:
+           //loopa8:
             if (r11->count == 0) break;
             r11++;
         }
         if (r9 == 0) return;
-       messageproc:
+       //messageproc:
         r11->count = time; r11->x = x<<8; r11->y = y<<8;
         r11->dx = (int)(xv*256); r11->dy = (int)(yv*256);
         if (strlen(b) > 58) exit(printf("Bad string %s", b));
@@ -257,7 +240,7 @@ void wipetexttab()
     char* r10 = (char*)texttabofs;
 
     for (int r3 = _textno*_textlen; r3 > 0; r3 -= 1)
-       loopa5:
+       //loopa5:
         *(r10++) = 0;
 }
 
@@ -286,9 +269,9 @@ void texthandler(int do_animation)
         int YyY = r11->y>>8;
         for (char* r10 = r11->text; *r10 != 0; r10++)
         {
-            char r0;
-           loopa7:
-            r0 = *r10;
+            //char r0;
+           //loopa7:
+            //r0 = *r10;
             if ((*r10-1) < 48)  // only plot known characters (charsadr is [48])
                 fspplot(charsadr, *r10-1, XxX, YyY);
             XxX += 14;
@@ -296,13 +279,12 @@ void texthandler(int do_animation)
             if (*r10 > 43) XxX -= 6;
         }
     }
-   textdone:;
+   //textdone:;
 //textdelete: r11->count = 0;
 }
 
 void mazeplot(int xpos, int ypos)
 {
-    if (vduvar.opengl) showgamescreen();
     writeclip();
     backdrop(xpos, ypos);
 
@@ -342,7 +324,7 @@ void mazeplot(int xpos, int ypos)
 
     for (; /*ins2:*/ (r5 < vduvar.yblocks+2) && (r7 < boardadr->height); r5++, r7++)
     {
-       l2:;
+       //l2:;
         int r4 = 0, r6 = ((xpos>>8)-(vduvar.xblocks*8))>>4;
         if (r6 < 0)
         {
@@ -351,15 +333,14 @@ void mazeplot(int xpos, int ypos)
 
         for (; /*ins1:*/ (r4 < vduvar.xblocks+3)&(r6 < boardadr->width); /*skip1:*/ r4++, r6++)
         {
-           l1:
+           //l1:
             r0 = *(boardadr->contents+boardwidth*r7+r6);
             draw_block(blockadr, r0, r4*vduvar.sprw+r8, r5*vduvar.sprh+r9, 0);
         }
     }
-   skip2:;
+   //skip2:;
 }
 
-GLuint batex[1];
 void backdrop(int xpos, int ypos)
 {
     //  swi_fastspr_clearwindow();
@@ -368,43 +349,19 @@ void backdrop(int xpos, int ypos)
 
     int r3 = ((xpos>>8)-(xpos>>10)+3072-768); // parallax
     int r2 = (44+48-(r3%48))%48;
-    float float_r3 = (xpos*3.0/1024)+3072-768;
-    float float_r2 = fmod(44+48-fmod(r3,48.0),48.0);
+    //float float_r3 = (xpos*3.0/1024)+3072-768;
+    //float float_r2 = fmod(44+48-fmod(r3,48.0),48.0);
 
     int r4 = 0x1f&((ypos>>8)-(ypos>>10)); // parallax
-    float float_r4 = fmod(ypos*3.0/1024,32.0);
+    //float float_r4 = fmod(ypos*3.0/1024,32.0);
 
-   modpos:
+   //modpos:
     back_to_blit.x = ((48-r2)*vduvar.backw)/48; back_to_blit.y = (r4*vduvar.backh)/32;
     back_to_blit.w = vduvar.backw; back_to_blit.h = vduvar.backh;
     
-    if (vduvar.opengl)
-    {
-	float btbx = 0.375*(48-float_r2)/48.0; float btby = 0.5*float_r4/32.0;
-	glBindTexture(GL_TEXTURE_2D, *batex);
-	glEnable(GL_TEXTURE_2D);
-	//glColor4f(1,1,1,1);
-	for (loc_to_blit.y = vduvar.gamey; loc_to_blit.y < vduvar.gamey+vduvar.gameh; loc_to_blit.y += vduvar.backh)
-	    for (loc_to_blit.x = vduvar.gamex; loc_to_blit.x < vduvar.gamex+vduvar.gamew; loc_to_blit.x += vduvar.backw)
-	    {	
-		glBegin(GL_TRIANGLE_STRIP);
-		glTexCoord2f(btbx+0.0, btby+0.0);
-		glVertex3f(loc_to_blit.x, loc_to_blit.y, 0.0);
-		glTexCoord2f(btbx+0.375, btby+0.0);
-		glVertex3f(loc_to_blit.x+vduvar.backw, loc_to_blit.y, 0.0);
-		glTexCoord2f(btbx+0.0, btby+0.5);
-		glVertex3f(loc_to_blit.x, loc_to_blit.y+vduvar.backh, 0.0);
-		glTexCoord2f(btbx+0.375, btby+0.5);
-		glVertex3f(loc_to_blit.x+vduvar.backw, loc_to_blit.y+vduvar.backh, 0.0);
-		glEnd();
-	    }
-    }
-    else
-    {
-        for (loc_to_blit.y = vduvar.gamey; loc_to_blit.y < vduvar.gamey+vduvar.gameh; loc_to_blit.y += vduvar.backh)
-	    for (loc_to_blit.x = vduvar.gamex; loc_to_blit.x < vduvar.gamex+vduvar.gamew; loc_to_blit.x += vduvar.backw)
-		SDL_BlitSurface(backsprite, &back_to_blit, ArcScreen, &loc_to_blit);
-    }
+    for (loc_to_blit.y = vduvar.gamey; loc_to_blit.y < vduvar.gamey+vduvar.gameh; loc_to_blit.y += vduvar.backh)
+    for (loc_to_blit.x = vduvar.gamex; loc_to_blit.x < vduvar.gamex+vduvar.gamew; loc_to_blit.x += vduvar.backw)
+    SDL_BlitSurface(backsprite, &back_to_blit, ArcScreen, &loc_to_blit);
 }
 
 void plotbonus(char bonusctr, int16_t bonusreplot)
@@ -422,18 +379,17 @@ void plotbonus(char bonusctr, int16_t bonusreplot)
     if (bonusctr != 0)
         fspplot(blockadr, (bonusctr+15 > _bonuslow+12) ? 0 : (bonusctr+15),
                 vduvar.bonusx, vduvar.bonusy-vduvar.bonush+r3);
-   nosecond:
+   //nosecond:
     if (bonusctr != 12)
         fspplot(blockadr, (bonusctr+17 > _bonuslow+12) ? 0 : (bonusctr+17),
                 vduvar.bonusx, vduvar.bonusy+vduvar.bonush+r3);
-   nothird:
+   //nothird:
     writeclip(); // reset the clip window
 }
 
-GLuint redtex[1], greytex[1];
 void showstrength(int r3)
 {
-   nolager:;
+   //nolager:;
     if (r3 > _strengthmax) r3 = _strengthmax;
     if (r3 < 0) r3 = 0;
     releaseclip();
@@ -443,43 +399,9 @@ void showstrength(int r3)
     strengthpart.x = 0; strengthpart.y = framectr&0x1f;
     strengthpart.w = vduvar.strengthw;
     strengthpart.h = vduvar.strengthh;
-    if (vduvar.opengl)
-    {
-	glBindTexture(GL_TEXTURE_2D, *greytex);
-	glBegin(GL_TRIANGLE_STRIP);
-	glTexCoord2f(0.0, strengthpart.y/64.0);
-	glVertex3f(strengthloc.x, strengthloc.y, 0.0);
-	glTexCoord2f((_strengthmax>>8)/128.0, strengthpart.y/64.0);
-	glVertex3f(strengthloc.x+strengthpart.w, strengthloc.y, 0.0);
-	glTexCoord2f(0.0, (6+strengthpart.y)/64.0);
-	glVertex3f(strengthloc.x, strengthloc.y+strengthpart.h, 0.0);
-	glTexCoord2f((_strengthmax>>8)/128.0, (6+strengthpart.y)/64.0);
-	glVertex3f(strengthloc.x+strengthpart.w, strengthloc.y+strengthpart.h, 0.0);
-	glEnd();
-    }
-    else
-    {
-        SDL_BlitSurface(greyness, &strengthpart, ArcScreen, &strengthloc);
-    }
+    SDL_BlitSurface(greyness, &strengthpart, ArcScreen, &strengthloc);
     strengthpart.w = (vduvar.strengthw*r3)/_strengthmax;
-    if (vduvar.opengl)
-    {
-	glBindTexture(GL_TEXTURE_2D, *redtex);
-	glBegin(GL_TRIANGLE_STRIP);
-	glTexCoord2f(0.0, strengthpart.y/64.0);
-	glVertex3f(strengthloc.x, strengthloc.y, 0.0);
-	glTexCoord2f((strengthpart.w*(_strengthmax>>8))/(vduvar.strengthw*128.0), strengthpart.y/64.0);
-	glVertex3f(strengthloc.x+strengthpart.w, strengthloc.y, 0.0);
-	glTexCoord2f(0.0, (6+strengthpart.y)/64.0);
-	glVertex3f(strengthloc.x, strengthloc.y+strengthpart.h, 0.0);
-	glTexCoord2f((strengthpart.w*(_strengthmax>>8))/(vduvar.strengthw*128.0), (6+strengthpart.y)/64.0);
-	glVertex3f(strengthloc.x+strengthpart.w, strengthloc.y+strengthpart.h, 0.0);
-	glEnd();
-    }
-    else
-    {
-        SDL_BlitSurface(redness, &strengthpart, ArcScreen, &strengthloc);
-    }
+    SDL_BlitSurface(redness, &strengthpart, ArcScreen, &strengthloc);
     writeclip();
     return;
 }
@@ -492,10 +414,7 @@ void scorewipe()
     scorearea.y = vduvar.scorey-16/2;
     scorearea.w = 128; scorearea.h = 16;
     releaseclip();
-    if (!vduvar.opengl)
-    {
-        SDL_BlitSurface(wipescr, NULL, ArcScreen, &scorearea);
-    }
+    SDL_BlitSurface(wipescr, NULL, ArcScreen, &scorearea);
     writeclip();
 }
 
@@ -506,10 +425,7 @@ void scorewiperead()
     scorearea.x = vduvar.scorex;
     scorearea.y = vduvar.scorey-16/2;
     scorearea.w = 128; scorearea.h = 16;
-    if (!vduvar.opengl)
-    {
 	SDL_BlitSurface(ArcScreen, &scorearea, wipescr, NULL);
-    }
 }
 
 void showscore(char plscore[8])
@@ -529,18 +445,18 @@ void showscore(char plscore[8])
             i = 2;
         }
     }
-   score10mil:
+   //score10mil:
     /*r7=0*/;
 
     for (; i < 8; i++)
     {
-       loop36:
+       //loop36:
         if (plscore[i] <= 10)
         {
             fspplot(charsadr, plscore[i], x, y);
             /*r8=1*/;
         }
-       scoreskip:
+       //scoreskip:
         x += _charwidth;
     }
 }
@@ -553,25 +469,18 @@ void writeclip()
 
 void releaseclip()
 {
-    if (vduvar.opengl)
-    {
-	glDisable(GL_CLIP_PLANE0);
-	glDisable(GL_CLIP_PLANE1);
-	glDisable(GL_CLIP_PLANE2);
-	glDisable(GL_CLIP_PLANE3);
-    }
-    else SDL_SetClipRect(ArcScreen, NULL);
+    SDL_SetClipRect(ArcScreen, NULL);
 }
 
 void clearkeybuf()
 {
-    do clearkbloop:;
-    while (osbyte_79(0) != -1);
-    do clearkbloop2 :;
+    //do clearkbloop:;
+    while (osbyte_79() != -1);
+    //do clearkbloop2 :;
     while (osbyte_81(1) != -1);
 }
 
-void showlives(int lives)
+void showlives_i(int lives)
 {
     releaseclip();
     fspplot(charsadr, lives&7, vduvar.livesx, vduvar.livesy);
@@ -585,7 +494,7 @@ void showgamescreen()
     //SDL_BlitSurface(GameScreen, NULL, ArcScreen, NULL);
     fspplot(&GameScreen, 0, 0, 0);
     #if 0
-    if (!vduvar.opengl) switchbank();
+    switchbank();
     #endif
 
     clip.x = vduvar.gamex;
@@ -595,7 +504,7 @@ void showgamescreen()
     writeclip();
 
     scorewiperead();
-    showlives();
+    showlives_v();
 }
 
 void showchatscreen()
@@ -605,7 +514,6 @@ void showchatscreen()
     fspplot(&ChatScreen, 0, 0, 0);
     #if 0
     switchbank();
-    if (vduvar.opengl) fspplot(&ChatScreen, 0, 0, 0);
     #endif
 
     clip.x = 20;
@@ -640,31 +548,20 @@ void init_strengthcol()
     int redpitch, greypitch;
     int w = vduvar.strengthw, h = 32+vduvar.strengthh;
 
-    if (vduvar.opengl)
-    {
-	glEnable(GL_TEXTURE_2D);
-	glGenTextures(1, redtex);
-	glGenTextures(1, greytex);
-	redpixels = (Uint32*)malloc(128*64*sizeof(Uint32));
-	greypixels = (Uint32*)malloc(128*64*sizeof(Uint32));
-	redpitch = greypitch = 128;
-    }
-    else
-    {
-	redness = SDL_CreateRGBSurface(SDL_HWSURFACE, w, h, 32, 0xff, 0xff00, 0xff0000, 0);
-	greyness = SDL_CreateRGBSurface(SDL_HWSURFACE, w, h, 32, 0xff, 0xff00, 0xff0000, 0);
+	redness = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32, 0xff, 0xff00, 0xff0000, 0);
+	greyness = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32, 0xff, 0xff00, 0xff0000, 0);
 	SDL_LockSurface(redness);
 	SDL_LockSurface(greyness);
 	redpixels = (Uint32*)redness->pixels;
 	greypixels = (Uint32*)greyness->pixels;
 	redpitch = redness->pitch/4;
 	greypitch = greyness->pitch/4;
-    }
+
     for (int j = 0; j < 32; j++)
         for (int i = 0; i < w; i++)
         {
-            redpixels[j*redpitch+i] = 0xff000000+0x11*(11+(random()%5));  // varying shade of red
-            greypixels[j*greypitch+i] = 0xff000000+0x111111*(3&random()); // varying shade of dark grey
+            redpixels[j*redpitch+i] = 0xff000000+0x11*(11+(rand()%5));  // varying shade of red
+            greypixels[j*greypitch+i] = 0xff000000+0x111111*(3&rand()); // varying shade of dark grey
         }
     for (int j = 32; j < 32+vduvar.strengthh; j++)
         for (int i = 0; i < w; i++)
@@ -672,22 +569,9 @@ void init_strengthcol()
             redpixels[j*redpitch+i] = redpixels[(j-32)*redpitch+i];
             greypixels[j*greypitch+i] = greypixels[(j-32)*greypitch+i];
         }
-    if (vduvar.opengl)
-    {
-	glBindTexture(GL_TEXTURE_2D, *redtex);
-        gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, 128, 64,
-			  GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV, (char*)redpixels);
-        free(redpixels);
-	glBindTexture(GL_TEXTURE_2D, *greytex);
-        gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, 128, 64,
-			  GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV, (char*)greypixels);
-        free(greypixels);
-    }
-    else
-    {
-	SDL_UnlockSurface(greyness);
+
+    SDL_UnlockSurface(greyness);
 	SDL_UnlockSurface(redness);
-    }
 }
 
 int palette[256];
@@ -705,63 +589,44 @@ void init_palette()
 
 void decomp(fastspr_sprite* DecompScreen, char* r11)
 {
-    Uint32* data;
+    //Uint32* data;
     Uint32* r10;
     Uint32* r9;
     
-    if (vduvar.opengl)
-    {
-	glEnable(GL_TEXTURE_2D);
-	glGenTextures(1, &DecompScreen->t);
-	glBindTexture(GL_TEXTURE_2D, DecompScreen->t);
-	data = (Uint32*)malloc(512*512*sizeof(Uint32));
-	r10 = data;
-	r9 = 512*256 + r10;
-    }
-    else
-    {
-        DecompScreen->s = SDL_CreateRGBSurface(SDL_HWSURFACE, 320, 256, 32,
-					       0xff, 0xff00, 0xff0000, 0);
-        SDL_LockSurface(DecompScreen->s);
-        r10 = (Uint32*)DecompScreen->s->pixels;
-        r9 = 0x14000 + r10;
-    }
+    DecompScreen->s = SDL_CreateRGBSurface(SDL_SWSURFACE, 320, 256, 32,
+                        0xff, 0xff00, 0xff0000, 0);
+    SDL_LockSurface(DecompScreen->s);
+    r10 = (Uint32*)DecompScreen->s->pixels;
+    r9 = 0x14000 + r10;
 
     r11 += 68;
     while (r9 > r10) // > or >=?
     {
-       loopb4:;
+       //loopb4:;
         char r0 = *(r11++);
         if (r0&0x80)
         {
-           sequence:; Uint32 s = palette[0xff&*(r11++)];
+           //sequence:;
+            Uint32 s = palette[0xff&*(r11++)];
             for (int r3 = (r0&0x7f)+2; (r9 > r10) && (r3 != 0); r3--)
-	    {
-               loopb6: *(r10++) = s;
-	        if (vduvar.opengl) if (((r10-data)%512) == 320)  r10 += (512-320);
-	    }
+            {
+                //loopb6:
+                *(r10++) = s;
+            }
         }
-        else pattern: for (int r3 = (r0&0x7f)+1; (r9 > r10) && (r3 != 0); r3--)
-	    {
-               loopb5: *(r10++) = palette[0xff&*(r11++)];
-	        if (vduvar.opengl) if (((r10-data)%512) == 320)  r10 += (512-320);
-	    }
-       decompdone:;
+        else
+           //pattern:
+            for (int r3 = (r0&0x7f)+1; (r9 > r10) && (r3 != 0); r3--)
+            {
+            //loopb5:
+                *(r10++) = palette[0xff&*(r11++)];
+            }
+       //decompdone:;
     }
     DecompScreen->w = vduvar.width;  DecompScreen->h = vduvar.height;
     DecompScreen->texw = (vduvar.width*8)/5; DecompScreen->texh = vduvar.height*2;
-    if (vduvar.opengl)
-    {
-        DecompScreen->x = -1;  DecompScreen->y = -1;
-        gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, 512, 512,
-			  GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV, (char*)data);
-        free(data);
-    }
-    else
-    {
 	DecompScreen->x = 0;  DecompScreen->y = 0;
 	SDL_UnlockSurface(DecompScreen->s);
-    }
 }
 
 void vduread(asylum_options options)
@@ -780,63 +645,91 @@ void vduread(asylum_options options)
     vduvar.strengthw = (_strengthmax>>8); vduvar.strengthh = 6;
     vduvar.bonusx = 290; vduvar.bonusy = 232; vduvar.bonush = 20;
     vduvar.sprw = (16*8)/viewsize; vduvar.sprh = (16*8)/viewsize;
-    SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 5 );
-    SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 5 );
-    SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 5 );
-    SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 4 );
-    SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
-    ArcScreen = SDL_SetVideoMode( vduvar.xreso, vduvar.yreso, 24 /*bpp*/,
-                                  (options.opengl ? SDL_OPENGL : 0) |
-				  (options.fullscreen ? SDL_FULLSCREEN : 0));
-    if (ArcScreen == NULL)
-    {
-	printf("Failed to set video mode: %s\n", SDL_GetError());
-	abort_game();
+
+    if (ArcWindow == NULL) {
+        ArcWindow = SDL_CreateWindow(
+            "Asylum",
+            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+            vduvar.xreso, vduvar.yreso,
+            (options.fullscreen ? SDL_WINDOW_FULLSCREEN : 0)
+        );
+
+        if (ArcWindow == NULL) {
+            fprintf(stderr, "Failed to create window: %s\n", SDL_GetError());
+            abort_game();
+        }
+
+        ArcRenderer = SDL_CreateRenderer(ArcWindow, -1, 0);
+
+        if (ArcRenderer == NULL) {
+            fprintf(stderr, "Failed to create renderer: %s\n", SDL_GetError());
+            abort_game();
+        }
+
+        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
+        SDL_RenderSetLogicalSize(ArcRenderer, vduvar.width, vduvar.height);
+        ArcScreen = SDL_GetWindowSurface(ArcWindow);
+        ArcTexture = SDL_CreateTexture(
+            ArcRenderer,
+            SDL_PIXELFORMAT_RGB888,
+            SDL_TEXTUREACCESS_STREAMING,
+            vduvar.width, vduvar.height
+        );
+
+        if (ArcScreen == NULL)
+        {
+            printf("Failed to set video mode: %s\n", SDL_GetError());
+            abort_game();
+        }
+
+        wipescr = SDL_CreateRGBSurface(SDL_SWSURFACE, 128, 16, 32, 0xff, 0xff00, 0xff0000, 0);
+        // backsprite contains four copies of the backdrop tile
+        backsprite = SDL_CreateRGBSurface(SDL_SWSURFACE, 2*48, 2*32, 32, 0xff, 0xff00, 0xff0000, 0);
+        /* initialise screenstart(149), modesize(7), hbytes(6) */
     }
-    vduvar.opengl = ((ArcScreen->flags & SDL_OPENGL) != 0);
-    wipescr = SDL_CreateRGBSurface(SDL_HWSURFACE, 128, 16, 32, 0xff, 0xff00, 0xff0000, 0);
-// backsprite contains four copies of the backdrop tile
-    backsprite = SDL_CreateRGBSurface(SDL_HWSURFACE, 2*48, 2*32, 32, 0xff, 0xff00, 0xff0000, 0);
-    /* initialise screenstart(149), modesize(7), hbytes(6) */
+    else
+    {
+        if (options.fullscreen) {
+            SDL_DisplayMode displayMode;
+            displayMode.w = vduvar.xreso;
+            displayMode.h = vduvar.yreso;
+            displayMode.driverdata = 0;
+            displayMode.refresh_rate = 0;
+            displayMode.format = 0;
+            SDL_SetWindowDisplayMode(ArcWindow, &displayMode);
+            SDL_SetWindowFullscreen(ArcWindow, SDL_WINDOW_FULLSCREEN);
+        }
+        else
+        {
+            SDL_SetWindowSize(ArcWindow, vduvar.xreso, vduvar.yreso);
+            SDL_SetWindowFullscreen(ArcWindow, 0);
+        }
+    }
+
     init_strengthcol();
     SDL_ShowCursor(SDL_DISABLE);
-    if (vduvar.opengl)
-    {
-        glViewport(0,0,vduvar.xreso,vduvar.yreso);
-        glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	gluLookAt(vduvar.width/2,vduvar.height/2,-64,
-		  vduvar.width/2,vduvar.height/2,0,
-		  0,1,0);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glFrustum(vduvar.width/4,-vduvar.width/4,vduvar.height/4,-vduvar.height/4,32,256);
-    }
+}
+
+void vdushutdown()
+{
+    if (ArcTexture != NULL)
+        SDL_DestroyTexture(ArcTexture);
+
+    if (ArcRenderer != NULL)
+        SDL_DestroyRenderer(ArcRenderer);
+
+    if (ArcWindow != NULL)
+        SDL_DestroyWindow(ArcWindow);
 }
 
 void backprep(char* backadr)
 {
-    if (vduvar.opengl)
-    {
-	Uint32 ba[64*128];
-	for (int j = 63; j >= 0; j--)
-	    for (int i = 127/*95*/; i >= 0; i--)
-		ba[j*128+i] = palette[backadr[(j%32)*48+(i%48)]];
-	glEnable(GL_TEXTURE_2D);
-	glGenTextures(1, batex);
-	glBindTexture(GL_TEXTURE_2D, *batex);
-	gluBuild2DMipmaps(GL_TEXTURE_2D, 4, 2*64, 2*32,
-			  GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV, (char*)ba);
-    }
-    else
-    {
 	SDL_LockSurface(backsprite);
 	Uint32* ba = (Uint32*)backsprite->pixels;
 	for (int j = 63; j >= 0; j--)
 	    for (int i = 95; i >= 0; i--)
-		ba[j*96+i] = palette[backadr[(j%32)*48+(i%48)]];
+		ba[j*96+i] = palette[(unsigned char)backadr[(j%32)*48+(i%48)]];
 	SDL_UnlockSurface(backsprite);
-    }
 }
 
 void startmessage()
@@ -846,7 +739,7 @@ void startmessage()
 
 void deathmessage()
 {
-    message(vduvar.gamex+vduvar.gamew/2-88, vduvar.gamey+vduvar.gameh+8, 0, -1, "¤ Snuffed It! ¤");
+    message(vduvar.gamex+vduvar.gamew/2-88, vduvar.gamey+vduvar.gameh+8, 0, -1, "- Snuffed It! -");
 }
 
 void endgamemessage()
@@ -856,19 +749,19 @@ void endgamemessage()
 
 void swi_blitz_wait(int d)
 {
-    SDL_Delay(d*10);
+    blitz_time = SDL_GetTicks();
+    blitz_diff = d*20 + last_blitz_time - blitz_time;
+
+    if (blitz_diff < 1)
+        blitz_diff = 1;
+
+    last_blitz_time = blitz_time + blitz_diff;
+    SDL_Delay((Uint32) blitz_diff);
 }
 
 void swi_fastspr_clearwindow()
 {
-    if (vduvar.opengl)
-    {
-	glDisable(GL_TEXTURE_2D);
-	glDisable(GL_BLEND);
-	glColor4f(0,0,0,1);
-	glRectf(0, 0, vduvar.width, vduvar.height);
-    }
-    else SDL_FillRect(ArcScreen, NULL, 0);
+    SDL_FillRect(ArcScreen, NULL, 0);
 }
 
 void swi_fastspr_setclipwindow(int x1, int y1, int x2, int y2)
@@ -877,26 +770,7 @@ void swi_fastspr_setclipwindow(int x1, int y1, int x2, int y2)
 
     clip.x = x1; clip.y = y1;
     clip.w = x2-x1; clip.h = y2-y1;
-    if (vduvar.opengl)
-    {
-	double clipplane0[4] = { 1.0, 0, 0, 0};
-	double clipplane1[4] = {-1.0, 0, 0, 0};
-	double clipplane2[4] = { 0, 1.0, 0, 0};
-	double clipplane3[4] = { 0,-1.0, 0, 0};
-	clipplane0[3] =-x1;
-	clipplane1[3] = x2;
-	clipplane2[3] =-y1;
-	clipplane3[3] = y2;
-	glClipPlane(GL_CLIP_PLANE0, clipplane0);
-	glClipPlane(GL_CLIP_PLANE1, clipplane1);
-	glClipPlane(GL_CLIP_PLANE2, clipplane2);
-	glClipPlane(GL_CLIP_PLANE3, clipplane3);
-	glEnable(GL_CLIP_PLANE0);
-	glEnable(GL_CLIP_PLANE1);
-	glEnable(GL_CLIP_PLANE2);
-	glEnable(GL_CLIP_PLANE3);
-    }
-    else SDL_SetClipRect(ArcScreen, &clip);
+    SDL_SetClipRect(ArcScreen, &clip);
 }
 
 void set_player_clip()
@@ -929,73 +803,40 @@ int initialize_sprites(char* start, fastspr_sprite* sprites, int max_sprites, ch
 {
     uint32_t* s = (uint32_t*)start;
 
-    if (read_littleendian(s) != 0x31505346) return 0; // "FSP1"
-    int num_sprites = read_littleendian(s+3);
+    if (read_littleendian_w(s) != 0x31505346) return 0; // "FSP1"
+    int num_sprites = read_littleendian_w(s+3);
     if (num_sprites > max_sprites) num_sprites = max_sprites;
     for (int i = 0; i < num_sprites; i++)
     {
-        if (read_littleendian(s+4+i) == 0)
+        if (read_littleendian_w(s+4+i) == 0)
         {
             sprites[i].s = NULL; continue;
         }
-        uint32_t* p = s+(read_littleendian(s+4+i)>>2);
+        uint32_t* p = s+(read_littleendian_w(s+4+i)>>2);
         uint32_t* r = s;
         if (i == num_sprites-1) r = (uint32_t*)end;
-        else for (int j = 0; (r == s) && (i+j < num_sprites-1); j++) r = s+(read_littleendian(s+5+i+j)>>2);
+        else for (int j = 0; (r == s) && (i+j < num_sprites-1); j++) r = s+(read_littleendian_w(s+5+i+j)>>2);
         if (r == s) r = (uint32_t*)end;
         uint8_t* pp = (uint8_t*)p;
         int wid = pp[0], hei = pp[1], xcen = pp[2], ycen = pp[3];
         sprites[i].x = xcen; sprites[i].y = ycen;
 	uint32_t* data;
-	if (vduvar.opengl)
-	{
-	    sprites[i].w = wid; sprites[i].h = hei;
-	    sprites[i].texw = 256; sprites[i].texh = 256;
-	    glGenTextures(1, &sprites[i].t);
-	    glBindTexture(GL_TEXTURE_2D, sprites[i].t);
-	    data = (uint32_t*)malloc(256*256*sizeof(uint32_t));
-	    for (int z = 0; z < 256*256; z++) data[z] = 0x0;
-	}
-	else
-	{
-	    sprites[i].s = SDL_CreateRGBSurface(SDL_HWSURFACE|SDL_SRCALPHA, wid, hei, 32,
-						0xff, 0xff00, 0xff0000, 0xff000000);
-	    SDL_LockSurface(sprites[i].s);
-	    data = (uint32_t*)sprites[i].s->pixels;
-	    for (int z = 0; z < wid*hei; z++) data[z] = 0x0;
-	}
-        for (uint32_t* q = p+2+hei; q < r; q++)
-        {
-            int x = ((0x0fffff00&read_littleendian(q))>>8)%320;
-            int y = ((0x0fffff00&read_littleendian(q))>>8)/320;
-            if ((y*wid+x < 0) || (y*wid+x >= wid*hei)) printf("%i: x=%i y=%i wid=%i hei=%i: bad idea\n", i, x, y, wid, hei);
-            else if (vduvar.opengl) data[(y+1)*256/*wid*/+(x+1)] = palette[0xff&read_littleendian(q)];
-            else data[y*wid+x] = palette[0xff&read_littleendian(q)];
-        }
-	if (vduvar.opengl)
-	{
-	    //uint32_t neighbours = maze_neighbours[i];
-	    for (int y=1; y<=hei; y++)
-	    {
-		data[y*256] = data[y*256+1]&0xffffff;
-		data[y*256+wid+1] = data[y*256+wid]&0xffffff;
-		/*data[y*256] = alldata[(neighbours&0xff0000)>>16][y*256+wid];
-		  data[y*256+wid+1] = alldata[(neighbours&0xff00)>>8][y*256+1];*/
-	    }
-	    for (int x=0; x<=wid+1; x++)
-	    {
-		data[x] = data[x+256]&0xffffff;
-		data[x+hei*256+256] = data[x+hei*256]&0xffffff;
-		/*data[x] = alldata[(neighbours&0xff000000)>>24][x+hei*256];
-		  data[x+hei*256+256] = alldata[(neighbours&0xff)][x+256];*/
-	    }
-	    //Without this line I don't get textures unless I use gluBuild2DMipmaps
-	    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST); 
-	    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0,
-			 GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV, (char*)data);
-	    free(data);
-	}
-	else SDL_UnlockSurface(sprites[i].s);
+
+    sprites[i].s = SDL_CreateRGBSurface(SDL_SWSURFACE, wid, hei, 32,
+                    0xff, 0xff00, 0xff0000, 0xff000000);
+    SDL_LockSurface(sprites[i].s);
+    data = (uint32_t*)sprites[i].s->pixels;
+    for (int z = 0; z < wid*hei; z++) data[z] = 0x0;
+
+    for (uint32_t* q = p+2+hei; q < r; q++)
+    {
+        int x = ((0x0fffff00&read_littleendian_w(q))>>8)%320;
+        int y = ((0x0fffff00&read_littleendian_w(q))>>8)/320;
+        if ((y*wid+x < 0) || (y*wid+x >= wid*hei)) printf("%i: x=%i y=%i wid=%i hei=%i: bad idea\n", i, x, y, wid, hei);
+        else data[y*wid+x] = palette[0xff&read_littleendian_w(q)];
+    }
+
+    SDL_UnlockSurface(sprites[i].s);
     }
     return num_sprites;
 }

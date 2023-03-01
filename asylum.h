@@ -15,11 +15,10 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#include <SDL/SDL.h>
-#include <SDL/SDL_mixer.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
@@ -46,6 +45,8 @@
 #define xlowlim 0
 #define ylowlim (15<<8)
 #define _speedlim (15<<8)
+
+#define _savearealen (0x9c0/32)
 
 #define _Playerchannel 0
 #define _Explochannel 3
@@ -86,9 +87,9 @@
 #define _Extender (17)
 #define _Alien1 (18)
 
-const int fullpitch = 0x2155;
+static const int fullpitch = 0x2155;
 
-typedef struct fastspr_sprite { int x; int y; int w; int h; GLuint t;
+typedef struct fastspr_sprite { int x; int y; int w; int h;
                                 int texw; int texh; SDL_Surface* s; } fastspr_sprite;
 
 typedef struct board { int first_int; int width; int height;
@@ -124,9 +125,9 @@ typedef struct bulent
 typedef struct asylum_options
 {
     char soundtype, soundquality, explospeed, gearchange;
-    char fullscreen, opengl, size, scale, mentalzone;
+    char fullscreen, arm3, size, scale, mentalzone;
     int leftkey, rightkey, upkey, downkey, firekey;
-    char soundvol, musicvol, joyno;
+    char soundvol, musicvol;
     char idpermit;
     char initials[3];
 } asylum_options;
@@ -191,12 +192,12 @@ void boxcheck(int r4, int r5, char** r7, char* r8, char* r9);
 void dowakeup(char* r7);
 void saveal();
 void restoreal();
-void save_player_state(uint8_t*);
-void restore_player_state(uint8_t*);
-void save_player(uint8_t*);
-int restore_player(uint8_t*);
-void save_alents(uint8_t*);
-void restore_alents(uint8_t*);
+void save_player_state(uint8_t store[24]);
+void restore_player_state(uint8_t store[24]);
+void save_player(uint8_t store[30]);
+int restore_player(uint8_t store[30]);
+void save_alents(uint8_t store[_savearealen*28]);
+void restore_alents(uint8_t store[_savearealen*28]);
 void moval();
 void procal(alent* r11);
 void alienwander(alent* r11, char* r5);
@@ -209,7 +210,7 @@ void alienstoppedfly(alent* r11);
 void almightjump(alent* r11);
 void alpossjump(alent* r11);
 void almightwelljump(alent* r11);
-void alientestplat(alent* r11, char* r5);
+void alientestplat(char* r5);
 void decoration(alent* r11);
 void extender(alent* r11);
 void alien1(alent* r11);
@@ -369,8 +370,8 @@ void completedzone();
 void findplayer(int *initplx, int *initply);
 void startplayer();
 void showgamescreen();
-void showlives();
-void showlives(int lives);
+void showlives_v();
+void showlives_i(int lives);
 void showchatscreen();
 void showchatscores();
 void clearkeybuf();
@@ -380,12 +381,11 @@ void dosaveconf();
 void getzone();
 void choosecontrol();
 void choosekeys();
-void choosestick();
 void tunegame();
 void tunesound();
 void soundfillin();
 void tunevolume();
-void maketestsound(int r1);
+//void maketestsound(int r1);
 void tunespeed();
 int selectkey(int x, int y, int xv, int yv, const char* a);
 int readopt(int maxopt);
@@ -423,7 +423,7 @@ void filesyserror();
 void badload();
 int badlevelload();
 void nomemory();
-int filelength(char* name, char* path);
+int filelength_alt(char* name, char* path);
 void showerror();
 void showerrorok();
 int errorwait();
@@ -432,13 +432,13 @@ void exithandler();
 void loadzone();
 void change_zone(int zone);
 void enterneuron(int r1);
-void exitneuron(int r1);
+void exitneuron();
 int showhighscore();
 void updatehst();
 int comparescore(char* r10);
 void showhst();
 void setup();
-void wipesoundtab();
+//void wipesoundtab();
 void wipetexttab();
 void initprojtab();
 void initbultab();
@@ -455,6 +455,7 @@ void screensave();
 void getvars();
 void init_palette();
 void vduread(asylum_options);
+void vdushutdown();
 int main(int argc, char** argv);
 void load_voices();
 void init_sounds();
@@ -463,10 +464,10 @@ void message_scroll(const char* a);
 void message(int x, int y, float xv, float yv, const char* a);
 
 void startmessage();
-void causeexplo(alent* r11);
-void causeexplo(projent* r11);
-void causeexplonopyro(alent* r11);
-void causeexplonopyro(projent* r11);
+void causeexplo_a(alent* r11);
+void causeexplo_p(projent* r11);
+void causeexplonopyro_a(alent* r11);
+void causeexplonopyro_p(projent* r11);
 void scorewipe();
 void scorewiperead();
 void explogonopyro(int r1, int r2, int r3, int r4, int r5, int r6, alent* r10);
@@ -482,28 +483,27 @@ void soundupdate();
 void losehandlers();
 void initrockettab();
 void initialize_music(int a);
-void swi_bodgemusic_start(int a, int b);
+void swi_bodgemusic_start(int a);
 void swi_bodgemusic_stop();
 void swi_bodgemusic_volume(int v);
 void swi_bodgemusic_load(int a, char* b);
 void swi_sound_qtempo(int t);
-void swi_sound_control(int c, int a, int p, int d);
-int swi_sound_speaker(int s);
-void swi_stasis_link(int a, int b);
-void swi_stasis_control(int a, int b);
-void swi_stasis_volslide(int a, int b, int c);
-void swi_removecursors();
-int osbyte_79(int c);
-int osbyte_79_unicode(int c);
+//void swi_sound_control(int c, int a, int p, int d)
+//int swi_sound_speaker(int s)
+//void swi_stasis_link(int a, int b)
+//void swi_stasis_control(int a, int b)
+//void swi_stasis_volslide(int a, int b, int c)
+//void swi_removecursors();
+int osbyte_79();
 int osbyte_7a();
 void osbyte_7c();
 int osbyte_81(int c);
-char swi_oscrc(int w, char* start, char* end, int bytes);
+char swi_oscrc();
 FILE* find_game(int op);
 FILE* find_config(int op);
-void swi_osgbpb(int n, FILE* f, char* start, char* end, int b);
+void swi_osgbpb(int n, FILE* f, char* start, char* end);
 int swi_osfile(int op, const char* name, char* start, char* end);
-int swi_joystick_read(int a, int* x, int* y);
+//int swi_joystick_read(int a, int* x, int* y)
 void swi_blitz_wait(int d);
 void swi_blitz_screenflush();
 int swi_blitz_hammerop(int op, char* name, char* path, char* space);
@@ -511,7 +511,6 @@ void swi_fastspr_clearwindow();
 void swi_fastspr_setclipwindow(int x1, int y1, int x2, int y2);
 int swi_readescapestate();
 int readmousestate();
-int swi_joystick_read(int a, int* x, int* y);
 void initialize_chatscreen(char* data);
 void initialize_gamescreen(char* data);
 int initialize_sprites(char* start, fastspr_sprite* sprites, int max_sprites, char* end);
@@ -519,7 +518,7 @@ int initialize_sprites(char* start, fastspr_sprite* sprites, int max_sprites, ch
 void dumpmusic(int argc, char** argv);
 void update_keyboard();
 void load_voice(int v, const char* filename);
-Mix_Chunk* make_sound(char samp, int initpitch, int volslide, int pitchslide, char frames);
+Mix_Chunk* make_sound(unsigned char samp, int initpitch, int volslide, int pitchslide, char frames);
 void soundclaim(int r0, char r1, char r2, int r3, int r4, int r5, char r6, int r7,
                 Mix_Chunk* static_chunk);
 void bidforsound(int r0, char r1, char r2, int r3, int r4, int r5, char r6, int r7,
@@ -528,12 +527,12 @@ void bidforsoundforce(int r0, char r1, char r2, int r3, int r4, int r5, char r6,
                       Mix_Chunk* chunk);
 void soundclaimmaybe(int r0, char r1, char r2, int r3, int r4, int r5, char r6, int r7,
                  Mix_Chunk* chunk);
-void soundclaimexplo(int r0, char r1, char r2, int r3, int r4, int r5, char r6, int r7,
+void soundclaimexplo(char r1, char r2, int r3, int r4, int r5, char r6, int r7,
                  Mix_Chunk* chunk);
 void init_mulaw();
 void init_audio();
-uint32_t read_littleendian(uint8_t* word);
-uint32_t read_littleendian(uint32_t* word);
+uint32_t read_littleendian_b(uint8_t* word);
+uint32_t read_littleendian_w(uint32_t* word);
 void write_littleendian(uint8_t* bytes, uint32_t word);
 void init_projsplittab();
 void init_rockettab();

@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#include <SDL/SDL_mixer.h>
+#include <SDL2/SDL_mixer.h>
 #include <math.h>
 #include "asylum.h"
 
@@ -37,7 +37,7 @@ void bidforsound(int r0, char r1, char r2, int r3, int r4, int r5, char r6, int 
   {
     r2 = (r2 > options.soundvol) ? options.soundvol : r2;
     if ((r0&7)==_Explochannel)
-      soundclaimexplo(r0&7, r1, r2, r3, r4, r5, r6, r7, chunk);
+      soundclaimexplo(r1, r2, r3, r4, r5, r6, r7, chunk);
     else
       soundclaimmaybe(r0&7, r1, r2, r3, r4, r5, r6, r7, chunk);
   }
@@ -49,10 +49,10 @@ void soundclaimmaybe(int r0, char r1, char r2, int r3, int r4, int r5, char r6, 
     if ((!Mix_Playing(r0)) || (Mix_GetChunk(r0)->volume < r2)) soundclaim(r0, r1, r2, r3, r4, r5, r6, r7, chunk);
 }
 
-void soundclaimexplo(int r0, char r1, char r2, int r3, int r4, int r5, char r6, int r7, Mix_Chunk* chunk)
+void soundclaimexplo(char r1, char r2, int r3, int r4, int r5, char r6, int r7, Mix_Chunk* chunk)
 {
 //soundtab=soundtabofs+(r0<<soundtabshift);
-   bidforexplo:
+   //bidforexplo:
     if ((!Mix_Playing(3)) || (Mix_GetChunk(3)->volume < r2)) soundclaim(3, r1, r2, r3, r4, r5, r6, r7, chunk);
     else if ((!Mix_Playing(4)) || (Mix_GetChunk(4)->volume < r2)) soundclaim(4, r1, r2, r3, r4, r5, r6, r7, chunk);
     else if ((!Mix_Playing(5)) || (Mix_GetChunk(5)->volume < r2)) soundclaim(5, r1, r2, r3, r4, r5, r6, r7, chunk);
@@ -72,14 +72,14 @@ typedef struct
     int pointer;
 } music_state;
 music_state music;
-char voice[32][30000];
+unsigned char voice[32][30000];
 char tuneload[4][30000];
 Sint16 mulaw[256];
 Mix_Music* oggmusic[4];
 
 void init_audio()
 {
-    sound_available = !Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 1024);
+    sound_available = !Mix_OpenAudioDevice(44100, MIX_DEFAULT_FORMAT, 2, 1024, NULL, 0);
     if (!sound_available) fprintf(stderr, "Sound disabled: opening audio device failed: %s\n", Mix_GetError());
 }
 
@@ -90,9 +90,9 @@ void init_mulaw()
         mulaw[i] = ((i&1) ? -1 : 1)*(exp[i>>5]+((i&0x1e)<<(2+(i>>5))));
 }
 
-Mix_Chunk* make_sound(char samp, int initpitch, int volslide, int pitchslide, char frames)
+Mix_Chunk* make_sound(unsigned char samp, int initpitch, int volslide, int pitchslide, char frames)
 {
-    int numsamples = (int)(frames*22050.0/50.0*2); // frames are 50Hz?
+    int numsamples = (int)(frames*44100.0/50.0*2); // frames are 50Hz?
     Mix_Chunk* mc = (Mix_Chunk*)malloc(sizeof(Mix_Chunk));
     Uint16* s = (Uint16*)malloc(numsamples*2*sizeof(Uint16));
 
@@ -101,29 +101,36 @@ Mix_Chunk* make_sound(char samp, int initpitch, int volslide, int pitchslide, ch
     mc->allocated = 0; // don't automatically free buffer
     mc->volume = 0xff; // XXX volume
     int time = 0;
-    double ps = ((Sint16)(pitchslide&0xffff))*22/22050.0;
-    double vs = ((Sint16)(volslide&0xffff))/22050.0;
-    Sint16 psmax = pitchslide>>16;
+    double ps = ((Sint16)(pitchslide&0xffff))*22/44100.0;
+    double vs = ((Sint16)(volslide&0xffff))/44100.0;
+    //Sint16 psmax = pitchslide>>16;
     double matching = 0;
     fprintf(stderr, "."); fflush(stderr);
-    for (int i = 0; i < numsamples*2*sizeof(Uint16); i += 4, time++, s += 2)
+    for (long long unsigned int i = 0; i < numsamples*2*sizeof(Uint16); i += 4, time++, s += 2)
     {
         Uint16 mono = 0;
 
         double pitch = initpitch+ps*time; // XXX pitchslide
         //if ((ps>0)&&(pitch>psmax)) pitch=psmax;
         //if ((ps<0)&&(pitch<psmax)) pitch=psmax;
-        int off = time;
-        double old_sample_rate = 500.0*pow(2, pitch/4096.0);
-        matching += old_sample_rate/22050;
+        //int off = time;
+        double old_sample_rate = 1000.0*pow(2, pitch/4096.0);
+        matching += old_sample_rate/44100.0;
         for (int j = (int)matching-32; j <= (int)matching+32; j++)
         {
             if ((j < 0)) continue;
-            int jj = j;
-            uint32_t len = read_littleendian(((uint32_t*)voice[samp])+6);
-            uint32_t gap = read_littleendian(((uint32_t*)voice[samp])+7); // ???
-            uint32_t rep = read_littleendian(((uint32_t*)voice[samp])+8);
-            if (jj >= len) if (rep == 0) continue;else jj = (len-rep)+((jj-len)%rep);double w;
+            unsigned int jj = j;
+            uint32_t len = read_littleendian_w(((uint32_t*)voice[samp])+6);
+            uint32_t gap = read_littleendian_w(((uint32_t*)voice[samp])+7); // ???
+            uint32_t rep = read_littleendian_w(((uint32_t*)voice[samp])+8);
+            if (jj >= len)
+            {
+                if (rep == 0)
+                    continue;
+                else
+                    jj = (len-rep)+((jj-len)%rep);
+            }
+            double w;
             if (jj >= len-gap)
                 w = ((jj-(len-gap))*(double)mulaw[voice[samp][jj+44-rep]]
                      +(len-jj)*(double)mulaw[voice[samp][jj+44]])/gap/4;
@@ -145,7 +152,7 @@ void soundclaim(int c, char samp, char initvol, int initpitch, int volslide, int
     //int* argv = (int*)vargv;
     //int c = argv[0]; char samp = argv[1]; char initvol = argv[2]; int initpitch = argv[3];
     //int volslide = argv[4]; int pitchslide = argv[5]; char frames = argv[6]; int stereo = argv[7];
-    Mix_Chunk* old_chunk = Mix_GetChunk(c);
+    //Mix_Chunk* old_chunk = Mix_GetChunk(c);
     Mix_Chunk* chunk = static_chunk ? static_chunk : make_sound(samp, initpitch, volslide, pitchslide, frames);
 
     Mix_HaltChannel(c);
@@ -206,7 +213,7 @@ void sdl_music_hook(void* udata, Uint8* stream, int len)
                 {
                     m->section = tuneload+8; if (len < 0) len = -2;
                 }
-                m->pointer = read_littleendian(((uint32_t*)tuneload)+0x42+*m->section);
+                m->pointer = read_littleendian_w(((uint32_t*)tuneload)+0x42+*m->section);
             }
         }
         *s = 0; s[1] = 0;
@@ -216,14 +223,14 @@ void sdl_music_hook(void* udata, Uint8* stream, int len)
             int pitch = m->pitch[v];
             int off = m->time-m->start_time[v];
             double old_sample_rate = 4000.0*pow(2, pitch/12.0);
-            double matching = off*old_sample_rate/22050;
+            double matching = off*old_sample_rate/44100.0;
             for (int j = (int)matching-window; j <= (int)matching+window; j++)
             {
                 if ((j < 0)) continue;
-                int jj = j;
-                uint32_t len = read_littleendian(((uint32_t*)voice[m->inst[v]])+6);
-                uint32_t gap = read_littleendian(((uint32_t*)voice[m->inst[v]])+7); // ???
-                uint32_t rep = read_littleendian(((uint32_t*)voice[m->inst[v]])+8);
+                unsigned int jj = j;
+                uint32_t len = read_littleendian_w(((uint32_t*)voice[m->inst[v]])+6);
+                uint32_t gap = read_littleendian_w(((uint32_t*)voice[m->inst[v]])+7); // ???
+                uint32_t rep = read_littleendian_w(((uint32_t*)voice[m->inst[v]])+8);
                 /*if (m->inst[v]==16)
                    while (jj>=6960+1000) jj-=6960;
                    else
@@ -310,7 +317,7 @@ void initialize_music(int a)
     music.time = 0;
     music.tune = tuneload[a];
     music.section = tuneload[a]+8;
-    music.pointer = read_littleendian(((uint32_t*)(tuneload[a]))+0x42+*music.section);
+    music.pointer = read_littleendian_w(((uint32_t*)(tuneload[a]))+0x42+*music.section);
     for (int v = 0; v < 4; v++)
     {
         music.pitch[v] = 0; music.inst[v] = 0; music.start_time[v] = 0;
@@ -336,7 +343,7 @@ void dumpmusic(int argc,char** argv)
     fputc(0, musicdumpfile); fputc(0, musicdumpfile); fputc(0, musicdumpfile); fputc(32, musicdumpfile);        // data start
     fputc(255, musicdumpfile); fputc(255, musicdumpfile); fputc(255, musicdumpfile); fputc(255, musicdumpfile); // length
     fputc(0, musicdumpfile); fputc(0, musicdumpfile); fputc(0, musicdumpfile); fputc(3, musicdumpfile);         // 16-bit linear
-    fputc(0, musicdumpfile); fputc(0, musicdumpfile); fputc(22050>>8, musicdumpfile); fputc(22050&0xff, musicdumpfile);
+    fputc(0, musicdumpfile); fputc(0, musicdumpfile); fputc(44100>>8, musicdumpfile); fputc(44100&0xff, musicdumpfile);
     fputc(0, musicdumpfile); fputc(0, musicdumpfile); fputc(0, musicdumpfile); fputc(2, musicdumpfile);         // stereo
     fputs("blotwell", musicdumpfile);
     sdl_music_hook(&music, wav+2, -1 /* dump entire track into buffer */);
@@ -344,13 +351,16 @@ void dumpmusic(int argc,char** argv)
     exit(0);
 }
 
+/*
 void maketestsound(int r1)
 {
     swi_stasis_link(1, 1);
     swi_sound_control(1, 0x100|r1, 0x20, 0xfe);
     //swi_bodgemusic_volume(musicvol);
 }
-void swi_bodgemusic_start(int a, int b)
+*/
+
+void swi_bodgemusic_start(int a)
 {
     if (!sound_available) return;
     swi_bodgemusic_stop();
@@ -385,8 +395,9 @@ void swi_bodgemusic_load(int a, char* b)
 }
 void swi_sound_qtempo(int t)
 {
-    music.tempo = (2756*0x1000)/t;
+    music.tempo = (5512*0x1000)/t;
 }
+/*
 void swi_sound_control(int c, int a, int p, int d)
 {
     ;
@@ -407,3 +418,4 @@ void swi_stasis_volslide(int a, int b, int c)
 {
     ;
 }
+*/

@@ -16,9 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include "asylum.h"
-#include <SDL/SDL_mixer.h>
 
-extern const char _bonuslow = 16, _bonushigh = 31, _megabonuslim = 35;
+const char _bonuslow = 16, _bonushigh = 31, _megabonuslim = 35;
 const char _neuronlowlim = 40, _neuronhighlim = 47;
 const char _gaslowlim = 54, _gashighlim = 55;
 const char _animlowlim = 54, _animhighlim = 63;
@@ -27,7 +26,7 @@ const char _fuelairno = 68;
 const char _bomblowlim = 64, _bombhighlim = 79;
 const char _atomlowlim = 72, _atomhighlim = 75;
 const char _boobylowlim = 76, _boobyhighlim = 79;
-extern const char _targetlowlim = 80, _powertarget = 84, _nuttertarget = 88, _targethighlim = 95;
+const char _targetlowlim = 80, _powertarget = 84, _nuttertarget = 88, _targethighlim = 95;
 const char _weaplowlim = 96, _weaphighlim = 111;
 const char _solidlowlim = 128, _solidhighlim = 131;
 const char _crumblelowlim = 160, _crumblehighlim = 167;
@@ -48,12 +47,12 @@ int xposmax; int yposmax;
 char *boardlowlim, *boardhighlim;
 extern char atombombctr;
 
-inline int block_anim(char b) {return ((b >= _animlowlim) && (b <= _animhighlim));}
-inline int block_solid(char b) {return ((b >= _solidlowlim) && (b <= _solidhighlim));}
-inline int block_crumblestand(char b) {return ((b >= _crumblestandlowlim) && (b <= _crumblestandhighlim));}
-inline int block_bomb(char b) {return ((b >= _bomblowlim) && (b <= _bombhighlim));}
-inline int block_target(char b) {return ((b >= _targetlowlim) && (b <= _targethighlim));}
-inline int block_booby(char b) {return ((b >= _boobylowlim) && (b <= _boobyhighlim));}
+static inline int block_anim(char b) {return ((b >= _animlowlim) && (b <= _animhighlim));}
+static inline int block_solid(char b) {return ((b >= _solidlowlim) && (b <= _solidhighlim));}
+static inline int block_crumblestand(char b) {return ((b >= _crumblestandlowlim) && (b <= _crumblestandhighlim));}
+static inline int block_bomb(char b) {return ((b >= _bomblowlim) && (b <= _bombhighlim));}
+static inline int block_target(char b) {return ((b >= _targetlowlim) && (b <= _targethighlim));}
+static inline int block_booby(char b) {return ((b >= _boobylowlim) && (b <= _boobyhighlim));}
 int block_gas(char b) {return ((b >= _gaslowlim) && (b < _gashighlim));}
 
 #define targetscore 500
@@ -92,14 +91,16 @@ void fuelairproc()
 
     for (char** r7 = ftw+_fueltablim; r7 > ftw;)
     {
-       loop22:;
+       //loop22:;
         char* r8 = *(ftr++);
         if (r8 == NULL)
         {
             *ftw = 0;  return;
         }
         char r0 = (*r8)&~1;
-        if (r0 != _gaslowlim) skipfuelair : continue;
+        if (r0 != _gaslowlim)
+           //skipfuelair:
+            continue;
         char* r1 = r8-1;
         if (*r1 == 0)
         {
@@ -121,7 +122,7 @@ void fuelairproc()
             *r1 = _gaslowlim; *(ftw++) = r1;
         }
     }
-   fuelprocdone:
+   //fuelprocdone:
     *ftw = 0;
 }
 
@@ -194,7 +195,7 @@ void normbombsurvive(char* r0)
     {
         fuelbomb(r0); return;
     }
-   normbombins:
+   //normbombins:
     destroy(r0);
 }
 
@@ -287,7 +288,7 @@ int plbombcheck(char* r5)
 
     if ((*r5 >= _targetlowlim) && (*r5 <= _targethighlim))
         r1 = normalbomb(r5);
-   nopltarg:
+   //nopltarg:
     return r1;
 }
 
@@ -304,7 +305,9 @@ int bombcheck(char* r5)
 
 int atombomb(char* r5) // Caution - recursive routine
 {
-    if (atombombctr >= 0x1f)  atomabandon: return atomloss;
+    if (atombombctr >= 0x1f)
+       //atomabandon:
+        return atomloss;
     atombombctr++;
     char r0 = (*r5)-_atomlowlim;
     if (r0&1) r5 -= 1;
@@ -334,7 +337,7 @@ void procatom(char* r5)
 
     if ((r0 >= _targetlowlim) && (r0 <= _targethighlim))
         shoottarget(r5);
-   noatomtarget:
+   //noatomtarget:
     *r5 = 0;
 
     if ((r0 < _atomlowlim) || (r0 > _atomhighlim)) return;
@@ -392,12 +395,12 @@ void bonuslim(char* r5)
         *r5 = 0;
         return;
     }
-   noneuron:
+   //noneuron:
     if ((*r5 >= _eleclowlim) && (*r5 <= _elechighlim))
     {
         electrocute(r5); return;
     }
-   bonuslimcont:
+   //bonuslimcont:
     if (*r5 < _bonuslow) return;
     if (*r5 > _megabonuslim) return;
     if (*r5 > _bonushigh) megabonus(r5);
@@ -432,35 +435,35 @@ void megabonus(char* r5)
     bidforsound(_Sparechannel, _SampBonus, 0x7e, 0x2000, 0, 0, 5, -127, CHUNK_BONUS_2);
     if (r0 == _bonushigh+1)
     {
-       bonus1:
+       //bonus1:
         bonusnumb(10);
         message(96, 224, 0, -2, "Bonus 10000");
         addtoscore(10000);
     }
     else if (r0 == _bonushigh+2)
     {
-       bonus2:
+       //bonus2:
         bonusnumb(20);
         message(96, 224, 0, -2, "Bonus 20000");
         addtoscore(20000);
     }
     else if (r0 == _bonushigh+3)
     {
-       bonus3:
+       //bonus3:
         bonusnumb(30);
         message(96, 224, 0, -2, "Bonus 30000");
         addtoscore(30000);
     }
     else if (r0 == _bonushigh+4)
     {
-       bonus5:
+       //bonus5:
         bonusnumb(50);
         message(96, 224, 0, -2, "Bonus 50000");
         addtoscore(50000);
     }
     else
     {
-       bonus10:
+       //bonus10:
         bonusnumb(100);
         message(96, 224, 0, -2, "Bonus 100000");
         addtoscore(100000);
@@ -493,15 +496,15 @@ void destroy(char* r5)
         makeobj(_Dyingbonus, x, y+(7<<8), 0, 0, (*r5)|(1<<20), 666);
         *r5 = 0;
     }
-   noshootbonus:
+   //noshootbonus:
     if ((r0 >= _targetlowlim) && (r0 <= _targethighlim))
     {
         shoottarget(r5); return;
     }
-   noshoottarget:
+   //noshoottarget:
     if ((r0 >= _crumblelowlim) && (r0 <= _crumblehighlim))
         if (0 == (3&(++ (*r5)))) *r5 = 0;
-   nocrumble:
+   //nocrumble:
     return;
 }
 
@@ -511,21 +514,21 @@ void atomrocket(projent* r11, char* r0)
 
     if (block_solid(r1))
     {
-        causeexplo(r11); return;
+        causeexplo_p(r11); return;
     }
-   atomdest:
+   //atomdest:
     if (((r1 >= _eleclowlim) && (r1 <= _elechighlim))
         || ((r1 >= _targetlowlim) && (r1 <= _targethighlim)))
-       elecatom:
+       //elecatom:
         elecdestroy(r0);
-   noelecatom2:
+   //noelecatom2:
     if ((r1 >= _neuronlowlim) && (r1 <= _neuronhighlim))
     {
-        causeexplo(r11); return;
+        causeexplo_p(r11); return;
     }
-   notreasatom:
+   //notreasatom:
     *r0 = 0;
-    causeexplo(r11);
+    causeexplo_p(r11);
 }
 
 
@@ -537,7 +540,7 @@ int foundtarget(int x, int y, int dx, int dy)
     char* r0 = translate(x+(8<<8)+(dx>>4), y-(8<<8)+(dy>>4));
     if (*r0 > _targethighlim) return 1;
     target &= ~3;
-    int r4 = random()&7;
+    int r4 = rand()&7;
     if (r4 == 7) r4 = 6;
     if (target >= _powertarget) r4 -= 6;
     if (target == _powertarget) r4 = 8+(r4&2);
@@ -584,7 +587,7 @@ void elecdelete(int r4, char* r10)
     char r2 = _eleclowlim;
 
     for (; (r2 >= _eleclowlim) && (r2 <= _elechighlim); r2 = *(r10 += r4))
-       loop78:
+       //loop78:
         *r10 = 0;
 }
 
@@ -602,7 +605,7 @@ void screenwakeup(int xpos, int ypos)
     char* r9 = r8+boardadr->width*boardadr->height; // end
 
     for (int r5 = _boxheight*2; r5 > 0; r7 += boardwidth, r5--)
-       loopa4:
+       //loopa4:
         linecheck(r7, r8, r9);
 }
 
@@ -610,7 +613,7 @@ void linecheck(char* r7, char* r8, char* r9)
 {
     for (int r4 = _boxwidth*2; r4 > 0; r4--)
     {
-       loopa3:
+       //loopa3:
         if ((r7 > r8) && (r9 > r7) && (*r7 > _triggerlim))
             dowakeup(r7);
         r7++;
@@ -633,12 +636,12 @@ void boxcheck(int r4, int r5, char** r7, char* r8, char* r9)
 {
     for (; r4 > 0; r4--)
     {
-       loop80:
+       //loop80:
         if ((*r7 > r8) && (r9 > *r7) && (**r7 > _triggerlim))
             dowakeup(*r7);
         *r7 += r5;
 // badalmarker: *(*r7-r5)=0;
-       wakeinsert:;
+       //wakeinsert:;
     }
 }
 
@@ -647,7 +650,7 @@ void findplayer(int *initplx, int *initply)
     char* r5 = NULL;
     for (int r3 = boardadr->width*boardadr->height; r3 > 0; r3--)
     {
-       loop60:
+       //loop60:
         if (*(boardadr->contents-1+r3) == _markerno)
         {
             *(boardadr->contents-1+r3) = 0; r5 = boardadr->contents-1+r3;
@@ -666,9 +669,13 @@ char* normtelep(char* start, int dir, char find)
     char* r3 = r2+boardadr->width*boardadr->height;
     for (r1 = start;; r1 += dir)
     {
-       loop62:
-        if (r1 <= r2) telepoffleft: return NULL;
-        if (r1 >= r3) telepoffright: return NULL;
+       //loop62:
+        if (r1 <= r2)
+           //telepoffleft:
+            return NULL;
+        if (r1 >= r3)
+           //telepoffright:
+            return NULL;
         if (*r1 == find) return r1;
     }
 }
@@ -709,12 +716,12 @@ void draw_block(fastspr_sprite* blockadr, int block, float x, float y, int layer
 	if (block >= _crumblelowlim) block &= ~8; //alter for crumbles
 	if (block_anim(block))
 	{
-	    int r1 = random()&7;
+	    int r1 = rand()&7;
 	    if ((block == _gaslowlim) || (block == _gashighlim)) block ^= r1>>2;
 	    else block ^= r1>>1;
 	}
     }
-   noanimate:
+   //noanimate:
     if ((block >= _weaplowlim+1) && (block <= _weaplowlim+6))
 	block = _weaplowlim+1;
     mazescaleplot(blockadr, block, x, y);

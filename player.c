@@ -20,12 +20,12 @@
 
 extern fastspr_sprite blokeadr[77], blockadr[256], alspradr[256], exploadr[32];
 
-extern const char _translowlim = 54, _transhighlim = 63;
+const char _translowlim = 54, _transhighlim = 63;
 const char _weapmpmgblam = 102, _weaprocketblam = 111;
-extern const char _blim = 112;
+const char _blim = 112;
 extern const char _platlowlim, _plathighlim;
 const char _teleplowlim = 192, _telephighlim = 199;
-extern const char _extendno = 152;
+const char _extendno = 152;
 const char _shutdownno = 200;
 
 #define _neuronstoget 8
@@ -103,7 +103,7 @@ Mix_Chunk* CHUNK_OBJGOT[10];
 char *pladr1, *pladr2, *pladr3, *pladr4, *pladr5, *pladr6, *pladr7, *pladr8;
 int pllx, plly, plhx, plhy;
 
-const int _savevalid = 0x4b4f6349;
+const unsigned int _savevalid = 0x4b4f6349;
 
 void save_player_state(uint8_t store[24])
 {
@@ -116,10 +116,10 @@ void save_player_state(uint8_t store[24])
 
 void restore_player_state(uint8_t store[24])
 {
-    lives = read_littleendian(store);
-    plstrength = read_littleendian(store+4);
-    neuronctr = read_littleendian(store+8);
-    shutdownctr = read_littleendian(store+12);
+    lives = read_littleendian_b(store);
+    plstrength = read_littleendian_b(store+4);
+    neuronctr = read_littleendian_b(store+8);
+    shutdownctr = read_littleendian_b(store+12);
     memcpy(plscore, store+16, 8);
 }
 
@@ -134,11 +134,11 @@ void save_player(uint8_t store[30])
 
 int restore_player(uint8_t store[30])
 {
-    if (_savevalid != read_littleendian(store)) return 1;
+    if (_savevalid != read_littleendian_b(store)) return 1;
     write_littleendian(store, 0);
-    xpos = read_littleendian(store+4); ypos = read_littleendian(store+8);
-    initplx = read_littleendian(store+12); initply = read_littleendian(store+16);
-    hvec = read_littleendian(store+20); vvec = read_littleendian(store+24);
+    xpos = read_littleendian_b(store+4); ypos = read_littleendian_b(store+8);
+    initplx = read_littleendian_b(store+12); initply = read_littleendian_b(store+16);
+    hvec = read_littleendian_b(store+20); vvec = read_littleendian_b(store+24);
     bonusctr = store[28]; plweapontype = store[29];
     return 0;
 }
@@ -148,8 +148,8 @@ void electrocute(char* r5)
     electrocuting = 1;
     int x, y;
     backtranslate(r5, &x, &y);
-    explogonopyro(x, y+(16<<8), (random()&(0xfe<<2))-(0xfe<<1),
-                  (random()&(0xfe<<2))-(0xfe<<1), 0, 0, 0);
+    explogonopyro(x, y+(16<<8), (rand()&(0xfe<<2))-(0xfe<<1),
+                  (rand()&(0xfe<<2))-(0xfe<<1), 0, 0, 0);
 }
 
 void playerplot(int whendead)
@@ -158,7 +158,7 @@ void playerplot(int whendead)
     set_player_clip();
     if (snuffctr)
     {
-       snuffhandler:
+       //snuffhandler:
         snuffctr += frameinc;
         plotterofs = ((snuffctr-96 < 0) ? 0 : (snuffctr-96))>>1;
         blokeplot(blokeadr, 70, 0, 8);
@@ -177,13 +177,13 @@ void playerplot(int whendead)
         if (telepctr > 64) telepctr = 0;
         if (telepctr == 32)
         {
-           dotelep:
+           //dotelep:
             xpos = telepxpos; ypos = telepypos;
             screenwakeup(xpos, ypos);
         }
     }
 
-   telepskip:
+   //telepskip:
     plotterofs = (telepctr > 32) ? (64-telepctr) : telepctr;
     plframe = (xpos>>10)&3;
     if (plframe == 2) plframe = 0;
@@ -192,9 +192,9 @@ void playerplot(int whendead)
 
     if (electrocuting)
     {
-       plotskel:
+       //plotskel:
         blokeplot(blokeadr, _skelspriteno+(plface == 1), 0, 8);
-       plotskelins:
+       //plotskelins:
         seestars();
         writeclip();
         return;
@@ -207,8 +207,9 @@ void playerplot(int whendead)
     if (plstrength < laststrength)
         r0 = _funnyfacesprbase+((framectr>>2)&3);
     else
-       nofunnyface: if (plface == 1) r0 = 15; else r0 = 12;
-   plotface:
+       //nofunnyface:
+        if (plface == 1) r0 = 15; else r0 = 12;
+   //plotface:
     blokeplot(blokeadr, r0, 0, -2); //head
 
     if (plweapontype == 0) plotarms();
@@ -217,7 +218,7 @@ void playerplot(int whendead)
     else if (plweapontype < _rockbase) plotmpmg();
     else plotrocket();
 
-   playerplotins:
+   //playerplotins:
     seestars();
     writeclip();
 }
@@ -302,7 +303,7 @@ void seestars()
     if (r4 == 0) return;
     if (electrocuting)
     {
-       elecsound:
+       //elecsound:
         bidforsound(_Playerchannel, _Samprave, 0x7f, 0x2000, (0xff)<<8, 0, 10, 0, CHUNK_ELEC_1);
         bidforsound(_Firechannel, _Samprave, 0x7f, 0x2400, (0xff)<<8, 0, 10, 127, CHUNK_ELEC_2);
         bidforsound(_Sparechannel, _Samprave, 0x7f, 0x2800, (0xff)<<8, 0, 10, -127, CHUNK_ELEC_3);
@@ -373,7 +374,7 @@ void bcheck()
     }
     else
     {
-       shorT:
+       //shorT:
         r11 = translate(fraudalent.x+fraudalent.dx, fraudalent.y);
         if ((*(r11) >= _blim) || (*(r11+boardwidth) >= _blim))
             noleft(&fraudalent);
@@ -382,7 +383,7 @@ void bcheck()
             noright(&fraudalent);
     }
 
-   bcheckins:
+   //bcheckins:
     r11 = translate(fraudalent.x+fraudalent.dx, fraudalent.y+fraudalent.dy);
 //up
     if ((*(r11-boardwidth) >= _blim) || (*(r11-boardwidth+1) >= _blim))
@@ -419,7 +420,7 @@ void plmove()
     if (falling <= 4) hvec = r2;
     else hvec += r2>>5;
 
-   cheatins:
+   //cheatins:
     if (ks.downpress >= 32) windctr = (1<<10);
     if (windctr) windcheck();
     if (hvec > _speedlim) hvec = _speedlim;
@@ -457,11 +458,11 @@ void plmove()
     }
     else
     {
-       fakecolch:
+       //fakecolch:
         plhx = plhy = 0;
         pllx = plly = 1;
     }
-   fakeins:
+   //fakeins:
     pladr1 = translate(x, y);
     pladr2 = pladr1+1;
     pladr3 = pladr1+boardwidth;
@@ -479,7 +480,7 @@ void plmove()
     }
 
     char* r11;
-   jumpins:
+   //jumpins:
     r11 = translate(xpos, ypos+(1<<8));
     pladr7 = r11+boardwidth;
     pladr8 = pladr7+1;
@@ -495,19 +496,19 @@ void plmove()
         if (falling)  // [else] standing on a platform
             if (falling > 1) if (vvec < (12<<8)) vvec += (8<<4);
     }
-    else nofall:
+    else //nofall:
         falling = 0;
-   nofallins:;
-   fallins:
+   //nofallins:;
+   //fallins:
     if ((*pladr8 >= _platlowlim+1) && (*pladr8 <= _plathighlim+1) && (1&*pladr8))
         pladr8[-1] = *pladr8-1;
-   noplatrebuild:
+   //noplatrebuild:
     if ((*pladr7 >= _platlowlim) && (*pladr7 <= _plathighlim))
     {
         if (*pladr7 != _plathighlim)
         {
             hiddenplatctr = 0;
-           nohidplat:
+           //nohidplat:
             if (!(1&*pladr7))
             {
                 plplattoobj(pladr7); return;
@@ -523,22 +524,22 @@ void plmove()
         }
     }
 
-   fallinscont:
+   //fallinscont:
     if ((!(1&*pladr7)) && (*pladr7 >= _teleplowlim) && (*pladr7 <= _telephighlim))
         telep();
 
-   notelep:
+   //notelep:
     if ((*(pladr1-boardwidth) >= _platlowlim)
         && (*(pladr1-boardwidth) <= (_plathighlim-1)))  //not hidden platforms
         plplattoobj(pladr1-boardwidth);
-    else notelepcont1 :
+    else //notelepcont1 :
         if ((*(pladr1-boardwidth+1) >= _platlowlim)
             && (*(pladr1-boardwidth+1) <= (_plathighlim-1)))  //not hidden platforms
             plplattoobj(pladr1-boardwidth+1);
-        else notelepcont2 :
+        else //notelepcont2 :
             if (*pladr7 == _extendno+1)
             {
-               doextendfromleft:
+               //doextendfromleft:
                 if (!extending)
                     if (*(pladr7+1) == 0)
                     {
@@ -550,7 +551,7 @@ void plmove()
             }
             else if (*pladr8 == _extendno+2)
             {
-               doextendfromright:
+               //doextendfromright:
                 if (!extending)
                     if (*(pladr8-1) == 0)
                     {
@@ -592,12 +593,12 @@ void deletepoint()
 {
     for (int r3 = 16; r3 > 0; r3--)
     {
-       delloop:;
-       dodeletepoint:;
+       //delloop:;
+       //dodeletepoint:;
         int x, y;
-        x = xpos+(((random()&15)+(random()&7)-11)<<12);
+        x = xpos+(((rand()&15)+(rand()&7)-11)<<12);
         if (x < (1<<12)) return;
-        y = ypos+(((random()&15)-7)<<12);
+        y = ypos+(((rand()&15)-7)<<12);
         if (y < (1<<12)) return;
         if (x > xposmax-(1<<12)) return;
         if (y > yposmax-(1<<12)) return;
@@ -612,8 +613,8 @@ void deletepoint()
 
 void alfire()
 {
-    int x = xpos+(((random()&15)+(random()&7)-11)<<12);
-    int y = ypos+(((random()&15)-7)<<12);
+    int x = xpos+(((rand()&15)+(rand()&7)-11)<<12);
+    int y = ypos+(((rand()&15)-7)<<12);
 
     if (x < (1<<12)) return;
     if (y < (1<<12)) return;
@@ -622,7 +623,7 @@ void alfire()
     x &= ~0xfff; y &= ~0xfff;
     if (foundtarget(x, y, (xpos-x)>>6, ((ypos+(12<<8))-y-(16<<8))>>6))
 	return;
-   nofoundtarget:
+   //nofoundtarget:
     if (foundtarget(x+(1<<12), y, (xpos-x-(1<<12))>>6, ((ypos+(12<<8))-y-(16<<8))>>6))
 	return;
     return;
@@ -630,8 +631,8 @@ void alfire()
 
 void makescoreobj(int x, int y, int type)
 {
-    makeobj(_Scoreobj, x, y, (random()&(0xfe<<1))-(0xfe)+(hvec>>2),
-            -(random()&(0xfe<<2)), type, 666);
+    makeobj(_Scoreobj, x, y, (rand()&(0xfe<<1))-(0xfe)+(hvec>>2),
+            -(rand()&(0xfe<<2)), type, 666);
 }
 
 
@@ -689,7 +690,7 @@ void telep()
     ks.downpress = 0;
     char* r1 = normtelep(pladr7, r5, r4^2);
     if (r1 == NULL) return;
-   telepfound:
+   //telepfound:
     backtranslate(r1, &telepxpos, &telepypos);
     telepxpos += (8<<8);
     telepypos -= (17<<8);
@@ -720,7 +721,7 @@ void goblam()
     }
     for (int r9 = 32; r9 > 0; r9--)
     {
-       loopa0:;
+       //loopa0:;
         int r3 = r9-16;
         int r4 = (r3 < 0) ? -r3 : r3;
         int r2, r0;
@@ -747,7 +748,7 @@ void goblam()
     explogonopyroquiet(r1, ypos+(4<<8), r3, 0, 0, 0 /*r6?*/, 0);
     plfired = 1;
     blamctr = 0;
-    bidforsound(_Firechannel, _SampAtomExplo, 0x7f, fullpitch, 0, 0, 8, 0, CHUNK_BLAM);
+    bidforsoundforce(_Firechannel, _SampAtomExplo, 0x7f, fullpitch, 0, 0, 8, 0, CHUNK_BLAM);
 }
 
 void rocketblam()
@@ -756,7 +757,7 @@ void rocketblam()
 
     for (int r9 = 32; r9 > 0; r9--)
     {
-       loopa1:
+       //loopa1:
         r1 = ypos+(2<<8);
         r3 = *(rockettabadr+r9*6);
         if (plface == 1)
@@ -791,7 +792,7 @@ void rocketblam()
     plfired = 1;
     blamctr = 0;
 
-    bidforsound(_Firechannel, _SampAtomExplo, 0x7f, fullpitch, 0, 0, 8, 0, CHUNK_BLAM);
+    bidforsoundforce(_Firechannel, _SampAtomExplo, 0x7f, fullpitch, 0, 0, 8, 0, CHUNK_BLAM);
     rocketblamctr -= 1;
     if ((rocketblamctr&(1<<7)) == 0) return;
     plweapontype = _rockbase;
@@ -804,7 +805,7 @@ void dofire()
     {
         firerocket(); return;
     }                                                // no return
-   firempmg:
+   //firempmg:
     if (plweapontype == _mpmgblamno)
     {
         blamfire(); return;
@@ -825,9 +826,9 @@ void dofire()
     default: r5 = (64*PROJ_TTL);
     }
     makeproj(xpos+((plface == 1) ? -(14<<8) : (14<<8)), ypos+(12<<8),
-             r2, (random()&0xff)-0x7f, (plface == 1) ? 31 : 30, r5);
+             r2, (rand()&0xff)-0x7f, (plface == 1) ? 31 : 30, r5);
     plfired = 1;
-    bidforsound(_Firechannel, _SampCannon, 0x7e, fullpitch, 0, 0, 2, 0, CHUNK_FIRE);
+    bidforsoundforce(_Firechannel, _SampCannon, 0x7e, fullpitch, 0, 0, 2, 0, CHUNK_FIRE);
 }
 
 void blamfire()
@@ -835,7 +836,7 @@ void blamfire()
     if (blamctr != 0) return;
     if (plweapontype == 8) blamctr = 128;
     else blamctr = 1;
-    bidforsound(_Firechannel, _Samprave, 0x7e, fullpitch, 0, (fullpitch<<17)+0x200, 40, 0, CHUNK_BLAMFIRE);
+    bidforsoundforce(_Firechannel, _Samprave, 0x7e, fullpitch, 0, (fullpitch<<17)+0x200, 40, 0, CHUNK_BLAMFIRE);
 }
 
 void firerocket()
@@ -875,7 +876,7 @@ void launchrocket()
 // ??? CMP R3,#1
     r4 += 36;
     int r6 = plweapontype-_rockbase;
-    if (r6 >= 6) r6 = random()&7;
+    if (r6 >= 6) r6 = rand()&7;
     int r5;
     switch (r6)
     {
@@ -895,7 +896,7 @@ void launchrocket()
     r5 |= PROJ_ROCKET;
     makeproj(r0+r2+r2, r1+r3+r3, r2, r3, r4, r5);
     plfired = 1;
-    bidforsound(_Firechannel, _SampRocket, 0x7e, fullpitch, 0, 0, 2, 0, CHUNK_ROCKET);
+    bidforsoundforce(_Firechannel, _SampRocket, 0x7e, fullpitch, 0, 0, 2, 0, CHUNK_ROCKET);
     rocketflag = 0;
 }
 
@@ -907,7 +908,7 @@ void getarms()
 
 void getrocket()
 {
-    plweapontype = _rockbase+(random()&7);
+    plweapontype = _rockbase+(rand()&7);
     plweaponspeed = 2;
     firerate = 12;
     blamctr = 0;
@@ -915,7 +916,7 @@ void getrocket()
 
 void getmpmg()
 {
-    plweapontype = _mpmgbase+(random()&7);
+    plweapontype = _mpmgbase+(rand()&7);
     plweaponspeed = 8;
     firerate = 4;
     blamctr = 0;
@@ -951,7 +952,7 @@ void bonuscheck()
 {
     if (snuffctr)
     {
-       deadbonuscheck:
+       //deadbonuscheck:
         atombombctr = 0;
         electrocuting = 0;
         deadbonuslim(pladr1);
@@ -985,7 +986,7 @@ void bonuscommon(int bonus, int x, int y)
     if (score > 10) score = 10;
     addtoscore(score*100);
     makescoreobj(x, y, 0xf60+(score<<8));
-    bidforsound(_Playerchannel, _SampBonus, 0x6e, 0x3000+(score<<6), 0, 0, 3, 0, CHUNK_OBJGOT[score-1]);
+    bidforsoundforce(_Playerchannel, _SampBonus, 0x6e, 0x3000+(score<<6), 0, 0, 3, 0, CHUNK_OBJGOT[score-1]);
 }
     
 
@@ -994,14 +995,14 @@ void sortbonus(char r0)
 {
     if ((r0 == 13) || (r0 == 14))
     {
-       bonusstrength:
+       //bonusstrength:
         lagerctr += (r0 == 14) ? 150 : 50;
         laststrength = plstrength;
     }
 
     if (r0 == bonusctr)
     {
-       advancebonus:
+       //advancebonus:
         bonusctr++;
         //sortreplot:
         bonusreplot = 28;
@@ -1018,7 +1019,7 @@ void sortbonus(char r0)
                 message(48, 24, 0, 0.5, "A potion and Skull!");
                 message(48, 176, 0, -0.5, "Rise from the dead!");
             }
-       sortreplot:
+       //sortreplot:
         bonusreplot = 28;
     }
     return;
@@ -1031,8 +1032,8 @@ void bonusnumb(int r9)
 
     for (r9 &= 0xff; r9 > 0; r9 -= (r6+1))
     {
-       loopc3:
-        r6 = (r6+1)&3; // was random()&3
+       //loopc3:
+        r6 = (r6+1)&3; // was rand()&3
         makescoreobj(xpos, ypos, 0xf60+(10<<8)+(r6<<8));
     }
 }
@@ -1133,7 +1134,7 @@ void scoreadd()
     for (int r6 = 8; r6 > 0; r6--)
     {
 	placeval /= 10;
-       loop37:
+       //loop37:
         if (plscoreadd >= placeval)
         {
             char digit = 0;
@@ -1155,13 +1156,13 @@ void scoreadd()
             }
             *r10 += digit;
         }
-       scoreaddskip:
+       //scoreaddskip:
         r10++;
     }
     char carry = 0;
     for (int r6 = 8; r6 > 0; r6--) // now handle carries
     {
-       loop38:
+       //loop38:
         r10--;
         *r10 += carry;
         if (*r10 >= 10)
@@ -1176,7 +1177,7 @@ void plplattoobj(char* r0)
 {
     plattoobjins(r0, vvec>>3);
     vvec = 0;
-   plattoins:
+   //plattoins:
     playerfire();
 }
 
@@ -1266,6 +1267,9 @@ void reinitplayer()
 	lives = 0;
 	snuffctr = 1;
     }
+    else
+        laststrength = plstrength;  // Prevents immediate injury effect
+
     return;
 }
 
@@ -1283,7 +1287,7 @@ int player_dead()
 {
     if (snuffctr >= 300)
     {
-       playerdead:
+       //playerdead:
 	showgamescreen();
 	if (lives == 0) return 2;
 	lives--;
@@ -1294,9 +1298,9 @@ int player_dead()
     else return 0;
 }
 
-void showlives()
+void showlives_v()
 {
-    showlives(lives);
+    showlives_i(lives);
 }
 
 void scorezero()
