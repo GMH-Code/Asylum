@@ -42,6 +42,7 @@ struct vduvar
     int strengthx; int strengthy;
     int strengthw; int strengthh;
     int bonusx; int bonusy; int bonush;
+    char scale;
 } vduvar;
 
 SDL_Window* ArcWindow;
@@ -90,14 +91,17 @@ void fspplotscaled(fastspr_sprite* sprites, char n, float x, float y,
 		   float xs, float ys)
 {
     fastspr_sprite sprite = sprites[(unsigned char)n];
+
+    if (sprite.s == NULL)
+        return;
+
     static SDL_Rect pos;
-    //float w = sprite.w*xs, h = sprite.h*ys;
+    float w = sprite.s->w*xs, h = sprite.s->h*ys;
     float posx = x-sprite.x*xs, posy = y-sprite.y*ys;
 
 	pos.x = (int)posx;  pos.y = (int)posy;
-    //pos.w = (int)w;  pos.h = (int)h;
-    //SDL_BlitScaled(sprite.s, NULL, ArcScreen, &pos);
-	SDL_BlitSurface(sprite.s, NULL, ArcScreen, &pos);
+    pos.w = (int)w;  pos.h = (int)h;
+    SDL_BlitScaled(sprite.s, NULL, ArcScreen, &pos);
 }
 
 void fspplot(fastspr_sprite* sprites, char n, int x, int y)
@@ -174,7 +178,12 @@ void blokeplot_cen(fastspr_sprite* sprites, char n, int x, int y)
 
 void message_scroll(const char* a)
 {
-    message(vduvar.gamex+vduvar.gamew+32, vduvar.gamey+vduvar.gameh-8, -3, 0, a);
+    message(
+        ((vduvar.gamex+vduvar.gamew)+32*vduvar.scale)/vduvar.scale,
+        ((vduvar.gamey+vduvar.gameh)-8*vduvar.scale)/vduvar.scale,
+        -3, 0,
+        a
+    );
 }
 
 void message(int x, int y, float xv, float yv, const char* a)
@@ -273,7 +282,7 @@ void texthandler(int do_animation)
            //loopa7:
             //r0 = *r10;
             if ((*r10-1) < 48)  // only plot known characters (charsadr is [48])
-                fspplot(charsadr, *r10-1, XxX, YyY);
+                fspplotscaled(charsadr, *r10-1, XxX*vduvar.scale, YyY*vduvar.scale, vduvar.scale, vduvar.scale);
             XxX += 14;
             if (*r10 <= 10) XxX += 2;
             if (*r10 > 43) XxX -= 6;
@@ -367,22 +376,22 @@ void backdrop(int xpos, int ypos)
 void plotbonus(char bonusctr, int16_t bonusreplot)
 {
     int fsplx, fsply, fsphx, fsphy;
-    fsplx = vduvar.bonusx-16/2; // align to write clip window to FastSpr
+    fsplx = vduvar.bonusx-((16/2)*vduvar.scale); // align to write clip window to FastSpr
     fsply = vduvar.bonusy-vduvar.bonush;
-    fsphx = vduvar.bonusx+16/2;
+    fsphx = vduvar.bonusx+((16/2)*vduvar.scale);
     fsphy = vduvar.bonusy+vduvar.bonush;
     swi_fastspr_setclipwindow(fsplx, fsply, fsphx, fsphy);
     swi_fastspr_clearwindow();
     int r3 = (((bonusreplot > 7) ? bonusreplot-8 : 0)*vduvar.bonush)/20;
-    fspplot(blockadr, (bonusctr+16 > _bonuslow+12) ? 0 : (bonusctr+16),
-            vduvar.bonusx, vduvar.bonusy+r3);
+    fspplotscaled(blockadr, (bonusctr+16 > _bonuslow+12) ? 0 : (bonusctr+16),
+            vduvar.bonusx, vduvar.bonusy+r3, vduvar.scale, vduvar.scale);
     if (bonusctr != 0)
-        fspplot(blockadr, (bonusctr+15 > _bonuslow+12) ? 0 : (bonusctr+15),
-                vduvar.bonusx, vduvar.bonusy-vduvar.bonush+r3);
+        fspplotscaled(blockadr, (bonusctr+15 > _bonuslow+12) ? 0 : (bonusctr+15),
+                vduvar.bonusx, vduvar.bonusy-vduvar.bonush+r3, vduvar.scale, vduvar.scale);
    //nosecond:
     if (bonusctr != 12)
-        fspplot(blockadr, (bonusctr+17 > _bonuslow+12) ? 0 : (bonusctr+17),
-                vduvar.bonusx, vduvar.bonusy+vduvar.bonush+r3);
+        fspplotscaled(blockadr, (bonusctr+17 > _bonuslow+12) ? 0 : (bonusctr+17),
+                vduvar.bonusx, vduvar.bonusy+vduvar.bonush+r3, vduvar.scale, vduvar.scale);
    //nothird:
     writeclip(); // reset the clip window
 }
@@ -411,8 +420,8 @@ void scorewipe()
     static SDL_Rect scorearea;
 
     scorearea.x = vduvar.scorex;
-    scorearea.y = vduvar.scorey-16/2;
-    scorearea.w = 128; scorearea.h = 16;
+    scorearea.y = vduvar.scorey-((16/2)*vduvar.scale);
+    scorearea.w = 128*vduvar.scale; scorearea.h = 16*vduvar.scale;
     releaseclip();
     SDL_BlitSurface(wipescr, NULL, ArcScreen, &scorearea);
     writeclip();
@@ -423,8 +432,8 @@ void scorewiperead()
     static SDL_Rect scorearea;
 
     scorearea.x = vduvar.scorex;
-    scorearea.y = vduvar.scorey-16/2;
-    scorearea.w = 128; scorearea.h = 16;
+    scorearea.y = vduvar.scorey-((16/2)*vduvar.scale);
+    scorearea.w = 128*vduvar.scale; scorearea.h = 16*vduvar.scale;
 	SDL_BlitSurface(ArcScreen, &scorearea, wipescr, NULL);
 }
 
@@ -437,11 +446,11 @@ void showscore(char plscore[8])
 
     if (plscore[0] == 0)
     {
-        x += _charwidth/2;
+        x += _charwidth/2*vduvar.scale;
         i = 1;
         if (plscore[1] == 0)
         {
-            x += _charwidth/2;
+            x += _charwidth/2*vduvar.scale;
             i = 2;
         }
     }
@@ -453,11 +462,11 @@ void showscore(char plscore[8])
        //loop36:
         if (plscore[i] <= 10)
         {
-            fspplot(charsadr, plscore[i], x, y);
+            fspplotscaled(charsadr, plscore[i], x, y, vduvar.scale, vduvar.scale);
             /*r8=1*/;
         }
        //scoreskip:
-        x += _charwidth;
+        x += _charwidth*vduvar.scale;
     }
 }
 
@@ -483,7 +492,7 @@ void clearkeybuf()
 void showlives_i(int lives)
 {
     releaseclip();
-    fspplot(charsadr, lives&7, vduvar.livesx, vduvar.livesy);
+    fspplotscaled(charsadr, lives&7, vduvar.livesx, vduvar.livesy, vduvar.scale, vduvar.scale);
     //switchbank();
     writeclip();
 }
@@ -492,7 +501,7 @@ void showgamescreen()
 {
     releaseclip();
     //SDL_BlitSurface(GameScreen, NULL, ArcScreen, NULL);
-    fspplot(&GameScreen, 0, 0, 0);
+    fspplotscaled(&GameScreen, 0, 0, 0, vduvar.scale, vduvar.scale);
     #if 0
     switchbank();
     #endif
@@ -511,15 +520,15 @@ void showchatscreen()
 {
     releaseclip();
     //SDL_BlitSurface(ChatScreen, NULL, ArcScreen, NULL);
-    fspplot(&ChatScreen, 0, 0, 0);
+    fspplotscaled(&ChatScreen, 0, 0, 0, vduvar.scale, vduvar.scale);
     #if 0
     switchbank();
     #endif
 
-    clip.x = 20;
-    clip.y = 20;
-    clip.w = 319 - 20*2;
-    clip.h = 255 - 20*2;
+    clip.x = 20*vduvar.scale;
+    clip.y = 20*vduvar.scale;
+    clip.w = (319 - 20*2)*vduvar.scale;
+    clip.h = (255 - 20*2)*vduvar.scale;
     writeclip();
 }
 
@@ -527,7 +536,7 @@ void showchatscores()
 {
     releaseclip();
     //SDL_BlitSurface(ChatScreen, NULL, ArcScreen, NULL);
-    fspplot(&ChatScreen, 0, 0, 0);
+    fspplotscaled(&ChatScreen, 0, 0, 0, vduvar.scale, vduvar.scale);
     writeclip();
 }
 
@@ -569,7 +578,7 @@ void init_strengthcol()
             redpixels[j*redpitch+i] = redpixels[(j-32)*redpitch+i];
             greypixels[j*greypitch+i] = greypixels[(j-32)*greypitch+i];
         }
-
+	
     SDL_UnlockSurface(greyness);
 	SDL_UnlockSurface(redness);
 }
@@ -631,81 +640,71 @@ void decomp(fastspr_sprite* DecompScreen, char* r11)
 
 void vduread(asylum_options options)
 {
-    int viewsize = 8*options.scale;
+    int scale = options.scale;
+    int viewsize = 8*scale;
     vduvar.xreso = 320*(options.size+1);
     vduvar.yreso = 256*(options.size+1);
-    vduvar.width = 320; vduvar.height = 256;
-    vduvar.gamex = 2*8; vduvar.gamey = 8;
-    vduvar.gamew = 2*18*8; vduvar.gameh = 2*12*8;
-    vduvar.backw = (48*8)/viewsize; vduvar.backh = (32*8)/viewsize;
-    vduvar.scorex = 160-(16*7)/2; vduvar.scorey = 220;
-    vduvar.xblocks = (18*viewsize)/8; vduvar.yblocks = (12*viewsize)/8;
-    vduvar.livesx = 44; vduvar.livesy = 234;
-    vduvar.strengthx = 108; vduvar.strengthy = 239;
-    vduvar.strengthw = (_strengthmax>>8); vduvar.strengthh = 6;
-    vduvar.bonusx = 290; vduvar.bonusy = 232; vduvar.bonush = 20;
-    vduvar.sprw = (16*8)/viewsize; vduvar.sprh = (16*8)/viewsize;
+    vduvar.width = 320*scale; vduvar.height = 256*scale;
 
-    if (ArcWindow == NULL) {
-        ArcWindow = SDL_CreateWindow(
-            "Asylum",
-            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-            vduvar.xreso, vduvar.yreso,
-            (options.fullscreen ? SDL_WINDOW_FULLSCREEN : 0)
-        );
+    // Visual playfield area cannot be larger than screen texture
+    if (vduvar.xreso < vduvar.width)
+        vduvar.xreso = vduvar.width;
 
-        if (ArcWindow == NULL) {
-            fprintf(stderr, "Failed to create window: %s\n", SDL_GetError());
-            abort_game();
-        }
+    if (vduvar.yreso < vduvar.height)
+        vduvar.yreso = vduvar.height;
 
-        ArcRenderer = SDL_CreateRenderer(ArcWindow, -1, 0);
+    vduvar.gamex = 2*viewsize; vduvar.gamey = viewsize;
+    vduvar.gamew = 2*18*viewsize; vduvar.gameh = 2*12*viewsize;
+    vduvar.backw = 48; vduvar.backh = 32;
+    vduvar.scorex = (160-(16*7)/2)*scale; vduvar.scorey = 220*scale;
+    vduvar.xblocks = 18*scale; vduvar.yblocks = 12*scale;
+    vduvar.livesx = 44*scale; vduvar.livesy = 234*scale;
+    vduvar.strengthx = 108*scale; vduvar.strengthy = 239*scale;
+    vduvar.strengthw = (_strengthmax>>8)*scale; vduvar.strengthh = 6*scale;
+    vduvar.bonusx = 290*scale; vduvar.bonusy = 232*scale; vduvar.bonush = 20*scale;
+    vduvar.sprw = 16; vduvar.sprh = 16;
+    vduvar.scale = scale;
+    vdushutdown();
 
-        if (ArcRenderer == NULL) {
-            fprintf(stderr, "Failed to create renderer: %s\n", SDL_GetError());
-            abort_game();
-        }
+    ArcWindow = SDL_CreateWindow(
+        "Asylum",
+	    SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+	    vduvar.xreso, vduvar.yreso,
+        (options.fullscreen ? SDL_WINDOW_FULLSCREEN : 0)
+    );
 
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
-        SDL_RenderSetLogicalSize(ArcRenderer, vduvar.width, vduvar.height);
-        ArcScreen = SDL_GetWindowSurface(ArcWindow);
-        ArcTexture = SDL_CreateTexture(
-            ArcRenderer,
-            SDL_PIXELFORMAT_RGB888,
-            SDL_TEXTUREACCESS_STREAMING,
-            vduvar.width, vduvar.height
-        );
+	if (ArcWindow == NULL) {
+		fprintf(stderr, "Failed to create window: %s\n", SDL_GetError());
+		abort_game();
+	}
 
-        if (ArcScreen == NULL)
-        {
-            printf("Failed to set video mode: %s\n", SDL_GetError());
-            abort_game();
-        }
+    ArcRenderer = SDL_CreateRenderer(ArcWindow, -1, 0);
 
-        wipescr = SDL_CreateRGBSurface(SDL_SWSURFACE, 128, 16, 32, 0xff, 0xff00, 0xff0000, 0);
-        // backsprite contains four copies of the backdrop tile
-        backsprite = SDL_CreateRGBSurface(SDL_SWSURFACE, 2*48, 2*32, 32, 0xff, 0xff00, 0xff0000, 0);
-        /* initialise screenstart(149), modesize(7), hbytes(6) */
+    if (ArcRenderer == NULL) {
+        fprintf(stderr, "Failed to create renderer: %s\n", SDL_GetError());
+        abort_game();
     }
-    else
+
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
+    SDL_RenderSetLogicalSize(ArcRenderer, vduvar.width, vduvar.height);
+	ArcScreen = SDL_GetWindowSurface(ArcWindow);
+    ArcTexture = SDL_CreateTexture(
+        ArcRenderer,
+        SDL_PIXELFORMAT_RGB888, 
+        SDL_TEXTUREACCESS_STREAMING,
+        vduvar.width, vduvar.height
+    );
+
+    if (ArcScreen == NULL)
     {
-        if (options.fullscreen) {
-            SDL_DisplayMode displayMode;
-            displayMode.w = vduvar.xreso;
-            displayMode.h = vduvar.yreso;
-            displayMode.driverdata = 0;
-            displayMode.refresh_rate = 0;
-            displayMode.format = 0;
-            SDL_SetWindowDisplayMode(ArcWindow, &displayMode);
-            SDL_SetWindowFullscreen(ArcWindow, SDL_WINDOW_FULLSCREEN);
-        }
-        else
-        {
-            SDL_SetWindowSize(ArcWindow, vduvar.xreso, vduvar.yreso);
-            SDL_SetWindowFullscreen(ArcWindow, 0);
-        }
+	printf("Failed to set video mode: %s\n", SDL_GetError());
+	abort_game();
     }
 
+    wipescr = SDL_CreateRGBSurface(SDL_SWSURFACE, 128*scale, 16*scale, 32, 0xff, 0xff00, 0xff0000, 0);
+// backsprite contains four copies of the backdrop tile
+    backsprite = SDL_CreateRGBSurface(SDL_SWSURFACE, 2*48, 2*32, 32, 0xff, 0xff00, 0xff0000, 0);
+    /* initialise screenstart(149), modesize(7), hbytes(6) */
     init_strengthcol();
     SDL_ShowCursor(SDL_DISABLE);
 }
@@ -734,17 +733,32 @@ void backprep(char* backadr)
 
 void startmessage()
 {
-    message(1000+vduvar.gamex+vduvar.gamew/2-32, vduvar.gamey+(vduvar.gameh*2)/3, 0, 0, "Let's Go!");
+    message(
+        (1000*vduvar.scale+vduvar.gamex+vduvar.gamew/2-32*vduvar.scale)/vduvar.scale,
+        (vduvar.gamey+(vduvar.gameh*2)/3)/vduvar.scale,
+        0, 0,
+        "Let's Go!"
+    );
 }
 
 void deathmessage()
 {
-    message(vduvar.gamex+vduvar.gamew/2-88, vduvar.gamey+vduvar.gameh+8, 0, -1, "- Snuffed It! -");
+    message(
+        (vduvar.gamex+vduvar.gamew/2-88*vduvar.scale)/vduvar.scale,
+        (vduvar.gamey+vduvar.gameh+8*vduvar.scale)/vduvar.scale,
+        0, -1,
+        "- Snuffed It! -"
+    );
 }
 
 void endgamemessage()
 {
-    message(vduvar.gamex+vduvar.gamew/2-88, vduvar.gamey+vduvar.gameh+56, 0, -1, "-  GAME OVER  -");
+    message(
+        (vduvar.gamex+vduvar.gamew/2-88*vduvar.scale)/vduvar.scale,
+        (vduvar.gamey+vduvar.gameh+56*vduvar.scale)/vduvar.scale,
+        0, -1,
+        "-  GAME OVER  -"
+    );
 }
 
 void swi_blitz_wait(int d)

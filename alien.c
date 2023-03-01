@@ -41,6 +41,7 @@ extern int boardwidth;
 extern int framectr;
 extern int xpos, ypos, xposmax, yposmax;
 extern char masterplotal;
+extern char boxscale;
 extern const char _blim;
 extern const char _extendno;
 extern const char _bonuslow, _bonushigh;
@@ -83,10 +84,10 @@ Mix_Chunk* CHUNK_SHOOTNUTTER;
 void moval()
 {
 //BL writeclip - active for release version
-    sprlx = xpos-(((xblocks_disturb+2)*8)<<8);
-    sprhx = xpos+(((xblocks_disturb+2)*8)<<8);
-    sprly = ypos-(((yblocks_disturb+2)*8)<<8);
-    sprhy = ypos+(((yblocks_disturb+2)*8)<<8);
+    sprlx = xpos-(((xblocks_disturb*boxscale+2)*8)<<8);
+    sprhx = xpos+(((xblocks_disturb*boxscale+2)*8)<<8);
+    sprly = ypos-(((yblocks_disturb*boxscale+2)*8)<<8);
+    sprhy = ypos+(((yblocks_disturb*boxscale+2)*8)<<8);
 
     alent* r11 = aladr;
     for (int r9 = _alno; r9 > 0; r9 -= 8)
@@ -262,7 +263,7 @@ void decoration(alent* r11)
     if ((r11->r5 -= (1<<16)) < 0)
         r11->type = 0;
     if (masterplotal == 0) return;
-    mazescaleplot(blokeadr, r11->r5&0xff, _xofs+(r11->x>>8), _yofs+8+(r11->y>>8));
+    blokeplot_cen(blokeadr, r11->r5&0xff, (r11->x>>8), 8+(r11->y>>8));
 }
 
 void extender(alent* r11)

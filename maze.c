@@ -35,13 +35,14 @@ const char _starsno = 15;
 const char _markerno = 255;
 
 const char _triggerlim = 193;
-#define _boxwidth 20
-#define _boxheight 16
 #define _boardhdrlen 32
 
 extern fastspr_sprite blockadr[256];
 extern board *boardadr;
 extern int framectr;
+extern int boxwidth;
+extern int boxheight;
+
 int boardwidth;
 int xposmax; int yposmax;
 char *boardlowlim, *boardhighlim;
@@ -600,18 +601,18 @@ void deletetwin(char* r5)
 
 void screenwakeup(int xpos, int ypos)
 {
-    char* r7 = translate(xpos, ypos)-_boxwidth-(boardwidth<<4);
+    char* r7 = translate(xpos, ypos)-boxwidth-(boardwidth<<4);
     char* r8 = boardadr->contents;                  //set up outer limits: start
     char* r9 = r8+boardadr->width*boardadr->height; // end
 
-    for (int r5 = _boxheight*2; r5 > 0; r7 += boardwidth, r5--)
+    for (int r5 = boxheight*2; r5 > 0; r7 += boardwidth, r5--)
        //loopa4:
         linecheck(r7, r8, r9);
 }
 
 void linecheck(char* r7, char* r8, char* r9)
 {
-    for (int r4 = _boxwidth*2; r4 > 0; r4--)
+    for (int r4 = boxwidth*2; r4 > 0; r4--)
     {
        //loopa3:
         if ((r7 > r8) && (r9 > r7) && (*r7 > _triggerlim))
@@ -622,14 +623,14 @@ void linecheck(char* r7, char* r8, char* r9)
 
 void wakeupal(int xpos, int ypos)
 {
-    char* r7 = translate(xpos, ypos)-(_boxwidth/2)-(boardwidth<<3);
+    char* r7 = translate(xpos, ypos)-(boxwidth/2)-(boardwidth<<3);
     char* r8 = boardadr->contents;                  //set up outer limits: start
     char* r9 = r8+boardadr->width*boardadr->height; // end
 
-    boxcheck(_boxwidth, 1, &r7, r8, r9);
-    boxcheck(_boxheight, boardwidth, &r7, r8, r9);
-    boxcheck(_boxwidth, -1, &r7, r8, r9);
-    boxcheck(_boxheight, -boardwidth, &r7, r8, r9);
+    boxcheck(boxwidth, 1, &r7, r8, r9);
+    boxcheck(boxheight, boardwidth, &r7, r8, r9);
+    boxcheck(boxwidth, -1, &r7, r8, r9);
+    boxcheck(boxheight, -boardwidth, &r7, r8, r9);
 }
 
 void boxcheck(int r4, int r5, char** r7, char* r8, char* r9)

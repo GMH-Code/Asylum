@@ -544,4 +544,6 @@ void init_chunk_maze();
 void init_chunk_alien();
 void init_chunk_player();
 
+void setboxsize();
+
 int need_redraw();

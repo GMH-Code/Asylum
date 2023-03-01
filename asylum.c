@@ -50,6 +50,8 @@ int currentzone;
 int xpos, ypos;
 char plscore[8];
 int plzone;
+int boxwidth, boxheight;
+char boxscale;
 
 void init()
 {
@@ -117,6 +119,7 @@ int abort_game()
 
 int game()
 {
+    setboxsize();
     wipetexttab();
     setup();
     switchcolch(); //setup colch vars
@@ -820,3 +823,9 @@ void permitid()
     options.idpermit = 1;
 }
 
+void setboxsize()
+{
+    boxscale = options.scale;
+    boxwidth = options.scale * 20;
+    boxheight = options.scale * 16;
+}

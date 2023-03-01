@@ -427,14 +427,17 @@ void tunespeed()
             {
                 options.size = (options.size+1) % 5;
 		vduread(options);
-		getvitalfiles();
+		/*
+        getvitalfiles();
 		getgamefiles();
 		getlevelsprites();
+        */
 		break;
             }
             else if (r0 == 3)
             {
                 options.scale ^= 3;
+                setboxsize();
 		vduread(options); break;
             }
             else if (r0 == 4)
