@@ -96,9 +96,9 @@ int options_menu(int gameon)
         wipetexttab();
         showchatscreen();
         swi_fastspr_clearwindow();
-        message(128, 48, 0, 0, "Options");
+        message(112, 48, 0, 0, "Options");
         message(32, 96, 0, 0, "1. Define Controls");
-        message(32, 128, 0, 0, "2. Tune Game Options");
+        message(32, 128, 0, 0, "2. Game Options");
         message(88, 224, 0, 0, "Fire - Play");
         if (gameon == 0) message(32, 160, 0, 0, "3. Choose Mental Zone");
         else message(32, 160, 0, 0, "3. Save Position");
@@ -230,7 +230,7 @@ void tunegame()
 {
     wipetexttab();
     showchatscreen();
-    message(96, 48, 0, 0, "Tune Game");
+    message(80, 48, 0, 0, "Game Options");
     if (sound_available)
     {
         message(64, 96, 0, 0, "1. Sound System");
@@ -246,6 +246,7 @@ void tunegame()
         message(112, 123, 0, 0, "Available");
     }
     message(64, 160, 0, 0, "3. Video System");
+    message(96, 224, 0, 0, "ESC - Exit");
     showtext();
     while (1)
         switch (readopt(3))
@@ -282,16 +283,16 @@ void tunesound()
        //tunesoundins:
         wipetexttab();
         soundfillin();
-        message(96, 32, 0, 0, "Tune Sound");
-        message(32, 60, 0, 0, sound1);
-        message(32, 80, 0, 0, sound2);
-        message(32, 100, 0, 0, sound3);
-        message(80, 120, 0, 0, "and music");
-        message(32, 140, 0, 0, sound4);
+        message(80, 48, 0, 0, "Sound Options");
+        message(32, 92, 0, 0, sound1);
+        message(32, 112, 0, 0, sound2);
+        message(32, 132, 0, 0, sound3);
+        message(80, 152, 0, 0, "and music");
+        message(32, 172, 0, 0, sound4);
         //message(32, 160, 0, 0, sound5);
         //message(32, 180, 0, 0, sound6);
         //message(32, 200, 0, 0, sound7);
-        message(96, 220, 0, 0, "ESC - Exit");
+        message(96, 224, 0, 0, "ESC - Exit");
         swi_blitz_wait(1);
         swi_fastspr_clearwindow();
         showtext();
@@ -329,13 +330,13 @@ void tunevolume()
     wipetexttab();
     if (sound_available && (options.soundtype == 2)) swi_bodgemusic_start(1);
     swi_bodgemusic_volume(options.musicvol);
-    message(80, 32, 0, 0, "Change volume");
+    message(80, 48, 0, 0, "Change volume");
     message(48, 96, 0, 0, "1. Louder effects");
     message(48, 116, 0, 0, "2. Quieter effects");
     message(48, 136, 0, 0, "3. Louder music");
     message(48, 156, 0, 0, "4. Quieter music");
     //message(48-14, 176, 0, 0, tunevol1);
-    message(96, 220, 0, 0, "ESC - Exit");
+    message(96, 224, 0, 0, "ESC - Exit");
     do
     {
        //tunevolumeloop:
@@ -405,13 +406,13 @@ void tunespeed()
             else speed2[0] = 17;
             if (options.arm3 == 1) speed3[0] = 16;
             else speed3[0] = 17;
-            message(96, 48, 0, 0, "Tune Video");
+            message(80, 48, 0, 0, "Video Options");
             message(32, 96, 0, 0, speed1);
             message(32, 120, 0, 0, sizedesc[options.size % 5]);
             message(32, 144, 0, 0, speed2);
             message(80, 168, 0, 0, "-Experimental-");
             message(32, 192, 0, 0, speed3);
-            message(96, 220, 0, 0, "ESC - Exit");
+            message(96, 224, 0, 0, "ESC - Exit");
 
             swi_blitz_wait(1);
             swi_fastspr_clearwindow();

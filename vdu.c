@@ -763,7 +763,7 @@ void backprep(char* backadr)
 void startmessage()
 {
     message(
-        (1000*vduvar.scale+vduvar.gamex+vduvar.gamew/2-32*vduvar.scale)/vduvar.scale,
+        (1000*vduvar.scale+vduvar.gamex+vduvar.gamew/2-48*vduvar.scale)/vduvar.scale,
         (vduvar.gamey+(vduvar.gameh*2)/3)/vduvar.scale,
         0, 0,
         "Let's Go!"
