@@ -20,6 +20,10 @@
 #include "asylum.h"
 #include <math.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 extern fastspr_sprite charsadr[48];
 extern fastspr_sprite blockadr[256];
 extern board *boardadr;
@@ -690,7 +694,11 @@ void vduread(asylum_options options)
 	ArcScreen = SDL_GetWindowSurface(ArcWindow);
     ArcTexture = SDL_CreateTexture(
         ArcRenderer,
-        SDL_PIXELFORMAT_RGB888, 
+#ifdef __EMSCRIPTEN__
+        SDL_PIXELFORMAT_BGR888,
+#else
+        SDL_PIXELFORMAT_RGB888,
+#endif
         SDL_TEXTUREACCESS_STREAMING,
         vduvar.width, vduvar.height
     );
@@ -770,7 +778,12 @@ void swi_blitz_wait(int d)
         blitz_diff = 1;
 
     last_blitz_time = blitz_time + blitz_diff;
+
+#ifdef __EMSCRIPTEN__
+    emscripten_sleep((Uint32) blitz_diff);
+#else
     SDL_Delay((Uint32) blitz_diff);
+#endif
 }
 
 void swi_fastspr_clearwindow()

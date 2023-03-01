@@ -677,7 +677,7 @@ char idpermitstring[] = "You are now permitted to play the ID!!!\n";
 
 void loadconfig()
 {
-    char keyword[12];
+    char keyword[13];
 
     FILE* r0 = find_config(0x40); // read access
     if (r0 != NULL)
