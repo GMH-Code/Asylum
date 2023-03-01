@@ -90,6 +90,7 @@ void adjustopt()
 
 int options_menu(int gameon)
 {
+    int gamesaved = 0;
     while (1)
     {
         clearkeybuf();
@@ -102,6 +103,10 @@ int options_menu(int gameon)
         message(88, 224, 0, 0, "Fire - Play");
         if (gameon == 0) message(32, 160, 0, 0, "3. Choose Mental Zone");
         else message(32, 160, 0, 0, "3. Save Position");
+
+        if (gamesaved)
+            message(64, 180, 0, 0, "Save OK!");
+
 // if (savedornot==1) message(32,192,0,0,"4. Save Settings");
         showtext();
         swi_blitz_wait(20); //
@@ -118,7 +123,10 @@ int options_menu(int gameon)
                 getzone(); dosaveconf();
             }
             else
+            {
                 savegame();
+                gamesaved = 1;
+            }
             break;
 //case  4: if (savedornot==1) dosaveconf(); break;
         default: soundupdate(); return 0;
