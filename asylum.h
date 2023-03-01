@@ -341,6 +341,8 @@ char* bonusfind();
 void bonus1();
 void megabonus(char* r5);
 void addtoscore(int sc);
+void setupextralife();
+void giveextralife();
 void pllosestrength(int str);
 void plsetneuronzone(int zone);
 void makescoreobj(int x, int y, int type);
@@ -461,6 +463,7 @@ void load_voices();
 void init_sounds();
 void init_keyboard();
 void message_scroll(const char* a);
+void extra_life_scroll();
 void message(int x, int y, float xv, float yv, const char* a);
 
 void startmessage();

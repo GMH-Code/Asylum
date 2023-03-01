@@ -190,6 +190,16 @@ void message_scroll(const char* a)
     );
 }
 
+void extra_life_scroll()
+{
+    message(
+        ((vduvar.gamex+vduvar.gamew)+32*vduvar.scale)/vduvar.scale,
+        ((vduvar.gamey+vduvar.gameh)-24*vduvar.scale)/vduvar.scale,
+        -3, 0,
+        "Extra Life"
+    );
+}
+
 void message(int x, int y, float xv, float yv, const char* a)
 {
     int time = 400;
@@ -496,7 +506,15 @@ void clearkeybuf()
 void showlives_i(int lives)
 {
     releaseclip();
-    fspplotscaled(charsadr, lives&7, vduvar.livesx, vduvar.livesy, vduvar.scale, vduvar.scale);
+    swi_fastspr_setclipwindow(
+        vduvar.livesx - _charwidth/2*vduvar.scale,
+        vduvar.livesy - _charwidth/2*vduvar.scale,
+        vduvar.livesx + _charwidth/2*vduvar.scale,
+        vduvar.livesy + _charwidth/2*vduvar.scale
+    );
+    //swi_fastspr_clearwindow();
+    fspplotscaled(&GameScreen, 0, 0, 0, vduvar.scale, vduvar.scale);
+    fspplotscaled(charsadr, lives%10, vduvar.livesx, vduvar.livesy, vduvar.scale, vduvar.scale);
     //switchbank();
     writeclip();
 }

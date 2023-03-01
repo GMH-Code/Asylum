@@ -55,6 +55,7 @@ int neuronctr;
 int snuffctr;
 int lives;
 int plscoreadd;
+char lastextralifedigit;
 extern char plscore[8];
 extern int boardwidth;
 extern int framectr;
@@ -78,6 +79,8 @@ const char _mpmgblamno = 8, _rocketblamno = 16;
 #define _plheight (32<<8)
 #define _plwidth (16<<8)
 #define _strengthinit (108<<8)
+
+#define _extralifedigit 2  // 4 = 1000, 3 = 10000, 2 = 100000 etc
 
 Mix_Chunk* CHUNK_ELEC_1;
 Mix_Chunk* CHUNK_ELEC_2;
@@ -1171,6 +1174,13 @@ void scoreadd()
         }
         else carry = 0;
     }
+
+    // Handle extra life
+    if (plscore[_extralifedigit] != lastextralifedigit)
+    {
+        giveextralife();
+        setupextralife();
+    }
 }
 
 void plplattoobj(char* r0)
@@ -1189,6 +1199,19 @@ void plotscore()
 void addtoscore(int sc)
 {
     plscoreadd += sc;
+}
+
+void setupextralife()
+{
+    lastextralifedigit = plscore[_extralifedigit];  // 5 = 100s, 4 = 1000s, etc
+}
+
+void giveextralife()
+{
+    lives++;
+    if (lives > 9) lives = 9;
+    showlives_v();
+    extra_life_scroll();
 }
 
 void pllosestrength(int str)
@@ -1268,7 +1291,10 @@ void reinitplayer()
 	snuffctr = 1;
     }
     else
+    {
         laststrength = plstrength;  // Prevents immediate injury effect
+        setupextralife();
+    }
 
     return;
 }
