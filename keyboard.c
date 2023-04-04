@@ -166,7 +166,7 @@ void keyread(key_state* ks)
       { if (++ks->fire == 0) ks->fire = 0xff; }
     else ks->fire = 0;
     if (ks->leftpress || ks->rightpress
-	  || ks->uppress || ks->downpress || ks->fire)
+      || ks->uppress || ks->downpress || ks->fire)
         ks->keypressed = 1;
 }
 

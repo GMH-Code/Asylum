@@ -1014,7 +1014,7 @@ void ember(alent* r11)
 void normbomb(char* r0, alent* r11)
 {
     if ((r11->type&0x1f) != 15) // booby
-	r11->type = 0;
+        r11->type = 0;
     normbombsurvive(r0);
 }
 

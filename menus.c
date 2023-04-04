@@ -128,7 +128,7 @@ int options_menu(int gameon)
                 gamesaved = 1;
             }
             break;
-//case  4: if (savedornot==1) dosaveconf(); break;
+        //case  4: if (savedornot==1) dosaveconf(); break;
         default: soundupdate(); return 0;
         }
     }
@@ -361,26 +361,26 @@ void tunevolume()
         if (r0 == 1)
         {
             if (options.soundvol < 0x40) options.soundvol = options.soundvol*2+1;
-	    //maketestsound(options.soundvol);
-	    continue;
+            //maketestsound(options.soundvol);
+            continue;
         }
         if (r0 == 2)
         {
             if (options.soundvol > 0) options.soundvol = (options.soundvol-1)/2;
-	    //maketestsound(options.soundvol);
-	    continue;
+            //maketestsound(options.soundvol);
+            continue;
         }
         if (r0 == 3)
         {
             if (options.musicvol < 0x40) options.musicvol = options.musicvol*2+1;
-	    //maketestsound(options.musicvol);
-	    continue;
+            //maketestsound(options.musicvol);
+            continue;
         }
         if (r0 == 4)
         {
             if (options.musicvol > 0) options.musicvol = (options.musicvol-1)/2;
-	    //maketestsound(options.musicvol);
-	    continue;
+            //maketestsound(options.musicvol);
+            continue;
         }
 
         if (r0 != 5) return;
@@ -394,10 +394,10 @@ char speed1[] = "-1. Full Screen";
 char speed2[] = "-3. Half Scale";
 char speed3[] = "-4. High Frame Rate";
 char sizedesc[][16] = {"-2.  320 x  256",
-		       "-2.  640 x  512",
-		       "-2.  960 x  768",
-		       "-2. 1280 x 1024",
-               "-2. 1600 x 1280"};
+                       "-2.  640 x  512",
+                       "-2.  960 x  768",
+                       "-2. 1280 x 1024",
+                       "-2. 1600 x 1280"};
 
 void tunespeed()
 {
@@ -430,30 +430,30 @@ void tunespeed()
             else if (r0 == 1)
             {
                 options.fullscreen ^= 1;
-		vduread(options); break;
+                vduread(options); break;
             }
             else if (r0 == 2)
             {
                 options.size = (options.size+1) % 5;
-		vduread(options);
-		/*
-        getvitalfiles();
-		getgamefiles();
-		getlevelsprites();
-        */
-		break;
+                vduread(options);
+                /*
+                getvitalfiles();
+                getgamefiles();
+                getlevelsprites();
+                */
+                break;
             }
             else if (r0 == 3)
             {
                 options.scale ^= 3;
                 setboxsize();
-		vduread(options); break;
+                vduread(options); break;
             }
             else if (r0 == 4)
             {
                 options.arm3 ^= 1;
                 checkifarm3();
-		vduread(options); break;
+                vduread(options); break;
             }
         }
         while (1);
@@ -481,7 +481,7 @@ int selectkey(int x, int y, int xv, int yv, const char* a)
     }
     while ((r1 = osbyte_79()) == -1); // scan keyboard
     if (swi_readescapestate()) return 0;
-    return -r1;                        // and r4 (?)
+    return -r1;                       // and r4 (?)
 }
 
 int readopt(int maxopt)
@@ -736,7 +736,7 @@ void updatehst()
 
         r10++;
 //int r9=1024;
-	key_state ks;
+        key_state ks;
         swi_blitz_wait(20); //
         for (int i = 0; i < 3; i++) r10[i] = options.initials[i];
         for (int r8 = 3; r8 > 0; r8--, r10++)

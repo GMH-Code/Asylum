@@ -233,7 +233,7 @@ int makebul(int x, int y, int dx, int dy, int type, int flags)
     int vol = (0x7f-((x+y)>>12));
     if (vol >= 80)
     {
-	bidforsound(_Explochannel,(type>=_bulspritebase+8)?_Sampbigzap:_Sampsmallzap,
+        bidforsound(_Explochannel,(type>=_bulspritebase+8)?_Sampbigzap:_Sampsmallzap,
                     (((vol&0x7f)>0x7c)?0x7c:(vol&0x7f))-((type==_bulspritebase+8)?0x10:0),
                     (type==_bulspritebase+8)?(fullpitch+0x1800):(fullpitch+0x1000),
                     0,(fullpitch<<16)|(0xfe<<8),2,r7,   // lifetime (frames)

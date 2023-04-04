@@ -79,7 +79,7 @@ void init()
         {
             abort_game(); return;
         }
-	currentzone = 0;
+        currentzone = 0;
         if (getlevelfiles())
         {
            //notgotlevel:
@@ -206,18 +206,18 @@ int game()
                 //swi_blitz_smallretrieve();
                 switch (player_dead())
                 {
-		   case 1:
-                    goto zonerestart;
-		   case 2:
-		    return 0;  
-		   case 0:
-		    ;
+                    case 1:
+                        goto zonerestart;
+                    case 2:
+                        return 0;
+                    case 0:
+                        ;
                 }
             }
             swi_bodgemusic_stop();
             redraw_bonus();
             if (escapehandler()) return 1;
-	    backprep(backadr);
+            backprep(backadr);
         }
         while (1);
     }
@@ -478,7 +478,7 @@ int main(int argc, char** argv)
 
     if ((argc > 2) && !strcmp(argv[1], "--dumpmusic"))
     {
-	dropprivs();
+        dropprivs();
         load_voices();
         dumpmusic(argc,argv);
         exit(0);
@@ -750,8 +750,8 @@ void saveconfig()
             config_keywords[12], options.musicvol,
             config_keywords[13], options.mentalzone,
             config_keywords[14], options.initials[0],
-	                         options.initials[1],
-	                         options.initials[2],
+                                 options.initials[1],
+                                 options.initials[2],
             ((options.idpermit == 1) ? idpermitstring : ""));
     fclose(r0);
 }

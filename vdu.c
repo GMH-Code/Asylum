@@ -92,7 +92,7 @@ void switchbank()
 }
 
 void fspplotscaled(fastspr_sprite* sprites, char n, float x, float y,
-		   float xs, float ys)
+                   float xs, float ys)
 {
     fastspr_sprite sprite = sprites[(unsigned char)n];
 
@@ -103,7 +103,7 @@ void fspplotscaled(fastspr_sprite* sprites, char n, float x, float y,
     float w = sprite.s->w*xs, h = sprite.s->h*ys;
     float posx = x-sprite.x*xs, posy = y-sprite.y*ys;
 
-	pos.x = (int)posx;  pos.y = (int)posy;
+    pos.x = (int)posx;  pos.y = (int)posy;
     pos.w = (int)w;  pos.h = (int)h;
     SDL_BlitScaled(sprite.s, NULL, ArcScreen, &pos);
 }
@@ -176,8 +176,8 @@ void cenplotdying(fastspr_sprite* sprites, char n, int x, int y, int r5)
 void blokeplot_cen(fastspr_sprite* sprites, char n, int x, int y)
 {
     mazescaleplot(sprites, n,
-		  (x*vduvar.sprw)/16.0+vduvar.gamex+(vduvar.gamew/2),
-		  (y*vduvar.sprh)/16.0+vduvar.gamey+(vduvar.gameh/2)-(vduvar.sprh/2));
+                  (x*vduvar.sprw)/16.0+vduvar.gamex+(vduvar.gamew/2),
+                  (y*vduvar.sprh)/16.0+vduvar.gamey+(vduvar.gameh/2)-(vduvar.sprh/2));
 }
 
 void message_scroll(const char* a)
@@ -219,18 +219,18 @@ void message(int x, int y, float xv, float yv, const char* a)
     {
         switch (*p)
         {
-        case '-': *q = ';'; break;
-        case 164: *q = ':'; break;
-        case '\'': *q = '~'; break;
-        case '.': *q = '{'; break;
-        case ',': *q = '|'; break;
-        case '?': *q = '<'; break;
-        case '!': *q = '}'; break;
-        case '%': *q = '>'; break;
-        case 200: *q = '?'; break;
-        case 215: *q = '@'; break;
-        case '#': *q = 127; break;
-        default: *q = *p;
+            case '-': *q = ';'; break;
+            case 164: *q = ':'; break;
+            case '\'': *q = '~'; break;
+            case '.': *q = '{'; break;
+            case ',': *q = '|'; break;
+            case '?': *q = '<'; break;
+            case '!': *q = '}'; break;
+            case '%': *q = '>'; break;
+            case 200: *q = '?'; break;
+            case 215: *q = '@'; break;
+            case '#': *q = 127; break;
+            default: *q = *p;
         }
         if (*q >= 96) *q -= 32;
         if (*q == ' ') *q = 0xff;
@@ -303,7 +303,7 @@ void texthandler(int do_animation)
         }
     }
    //textdone:;
-//textdelete: r11->count = 0;
+   //textdelete: r11->count = 0;
 }
 
 void mazeplot(int xpos, int ypos)
@@ -316,14 +316,13 @@ void mazeplot(int xpos, int ypos)
     int r8 = ((15-(r0&15)-16)*vduvar.sprw)/16+vduvar.gamex;
     int r9 = ((15-(r1&15)-8)*vduvar.sprh)/16+vduvar.gamey;
 
-
     int r5 = 0, r7 = (r1>>4);
     if (r7 < 0)
     {
         r5 = -r7; r7 = 0;
     }
 
-// Draw midground elements
+    // Draw midground elements
     for (; /*ins2:*/ (r5 < vduvar.yblocks+2) && (r7 < boardadr->height); r5++, r7++)
     {
         int r4 = 0, r6 = ((xpos>>8)-(vduvar.xblocks*8))>>4;
@@ -334,11 +333,11 @@ void mazeplot(int xpos, int ypos)
         for (; /*ins1:*/ (r4 < vduvar.xblocks+3)&(r6 < boardadr->width); /*skip1:*/ r4++, r6++)
         {
             r0 = *(boardadr->contents+boardwidth*r7+r6);
-	    draw_block(blockadr, r0, (r4*vduvar.sprw*15.0)/16+vduvar.xblocks/2+1+r8,
-		       (r5*vduvar.sprh*15.0)/16+vduvar.yblocks/2+1+r9, 1);
+            draw_block(blockadr, r0, (r4*vduvar.sprw*15.0)/16+vduvar.xblocks/2+1+r8,
+                       (r5*vduvar.sprh*15.0)/16+vduvar.yblocks/2+1+r9, 1);
         }
     }
-// Now foreground ones
+    // Now foreground ones
     r5 = 0, r7 = (r1>>4);
     if (r7 < 0)
     {
@@ -451,7 +450,7 @@ void scorewiperead()
     scorearea.x = vduvar.scorex;
     scorearea.y = vduvar.scorey-((16/2)*vduvar.scale);
     scorearea.w = 128*vduvar.scale; scorearea.h = 16*vduvar.scale;
-	SDL_BlitSurface(ArcScreen, &scorearea, wipescr, NULL);
+    SDL_BlitSurface(ArcScreen, &scorearea, wipescr, NULL);
 }
 
 void showscore(char plscore[8])
@@ -582,14 +581,14 @@ void init_strengthcol()
     int redpitch, greypitch;
     int w = vduvar.strengthw, h = 32+vduvar.strengthh;
 
-	redness = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32, 0xff, 0xff00, 0xff0000, 0);
-	greyness = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32, 0xff, 0xff00, 0xff0000, 0);
-	SDL_LockSurface(redness);
-	SDL_LockSurface(greyness);
-	redpixels = (Uint32*)redness->pixels;
-	greypixels = (Uint32*)greyness->pixels;
-	redpitch = redness->pitch/4;
-	greypitch = greyness->pitch/4;
+    redness = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32, 0xff, 0xff00, 0xff0000, 0);
+    greyness = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32, 0xff, 0xff00, 0xff0000, 0);
+    SDL_LockSurface(redness);
+    SDL_LockSurface(greyness);
+    redpixels = (Uint32*)redness->pixels;
+    greypixels = (Uint32*)greyness->pixels;
+    redpitch = redness->pitch/4;
+    greypitch = greyness->pitch/4;
 
     for (int j = 0; j < 32; j++)
         for (int i = 0; i < w; i++)
@@ -603,9 +602,9 @@ void init_strengthcol()
             redpixels[j*redpitch+i] = redpixels[(j-32)*redpitch+i];
             greypixels[j*greypitch+i] = greypixels[(j-32)*greypitch+i];
         }
-	
+
     SDL_UnlockSurface(greyness);
-	SDL_UnlockSurface(redness);
+    SDL_UnlockSurface(redness);
 }
 
 int palette[256];
@@ -644,7 +643,7 @@ void decomp(fastspr_sprite* DecompScreen, char* r11)
             Uint32 s = palette[0xff&*(r11++)];
             for (int r3 = (r0&0x7f)+2; (r9 > r10) && (r3 != 0); r3--)
             {
-                //loopb6:
+               //loopb6:
                 *(r10++) = s;
             }
         }
@@ -652,15 +651,15 @@ void decomp(fastspr_sprite* DecompScreen, char* r11)
            //pattern:
             for (int r3 = (r0&0x7f)+1; (r9 > r10) && (r3 != 0); r3--)
             {
-            //loopb5:
+               //loopb5:
                 *(r10++) = palette[0xff&*(r11++)];
             }
        //decompdone:;
     }
     DecompScreen->w = vduvar.width;  DecompScreen->h = vduvar.height;
     DecompScreen->texw = (vduvar.width*8)/5; DecompScreen->texh = vduvar.height*2;
-	DecompScreen->x = 0;  DecompScreen->y = 0;
-	SDL_UnlockSurface(DecompScreen->s);
+    DecompScreen->x = 0;  DecompScreen->y = 0;
+    SDL_UnlockSurface(DecompScreen->s);
 }
 
 void vduread(asylum_options options)
@@ -693,15 +692,15 @@ void vduread(asylum_options options)
 
     ArcWindow = SDL_CreateWindow(
         "Asylum",
-	    SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-	    vduvar.xreso, vduvar.yreso,
+        SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+        vduvar.xreso, vduvar.yreso,
         (options.fullscreen ? SDL_WINDOW_FULLSCREEN : 0)
     );
 
-	if (ArcWindow == NULL) {
-		fprintf(stderr, "Failed to create window: %s\n", SDL_GetError());
-		abort_game();
-	}
+    if (ArcWindow == NULL) {
+        fprintf(stderr, "Failed to create window: %s\n", SDL_GetError());
+        abort_game();
+    }
 
     ArcRenderer = SDL_CreateRenderer(ArcWindow, -1, 0);
 
@@ -712,7 +711,7 @@ void vduread(asylum_options options)
 
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
     SDL_RenderSetLogicalSize(ArcRenderer, vduvar.width, vduvar.height);
-	ArcScreen = SDL_GetWindowSurface(ArcWindow);
+    ArcScreen = SDL_GetWindowSurface(ArcWindow);
     ArcTexture = SDL_CreateTexture(
         ArcRenderer,
 #ifdef __EMSCRIPTEN__
@@ -726,12 +725,12 @@ void vduread(asylum_options options)
 
     if (ArcScreen == NULL)
     {
-	printf("Failed to set video mode: %s\n", SDL_GetError());
-	abort_game();
+        printf("Failed to set video mode: %s\n", SDL_GetError());
+        abort_game();
     }
 
     wipescr = SDL_CreateRGBSurface(SDL_SWSURFACE, 128*scale, 16*scale, 32, 0xff, 0xff00, 0xff0000, 0);
-// backsprite contains four copies of the backdrop tile
+    // backsprite contains four copies of the backdrop tile
     backsprite = SDL_CreateRGBSurface(SDL_SWSURFACE, 2*48, 2*32, 32, 0xff, 0xff00, 0xff0000, 0);
     /* initialise screenstart(149), modesize(7), hbytes(6) */
     init_strengthcol();
@@ -752,12 +751,12 @@ void vdushutdown()
 
 void backprep(char* backadr)
 {
-	SDL_LockSurface(backsprite);
-	Uint32* ba = (Uint32*)backsprite->pixels;
-	for (int j = 63; j >= 0; j--)
-	    for (int i = 95; i >= 0; i--)
-		ba[j*96+i] = palette[(unsigned char)backadr[(j%32)*48+(i%48)]];
-	SDL_UnlockSurface(backsprite);
+    SDL_LockSurface(backsprite);
+    Uint32* ba = (Uint32*)backsprite->pixels;
+    for (int j = 63; j >= 0; j--)
+        for (int i = 95; i >= 0; i--)
+            ba[j*96+i] = palette[(unsigned char)backadr[(j%32)*48+(i%48)]];
+    SDL_UnlockSurface(backsprite);
 }
 
 void startmessage()
@@ -868,23 +867,23 @@ int initialize_sprites(char* start, fastspr_sprite* sprites, int max_sprites, ch
         uint8_t* pp = (uint8_t*)p;
         int wid = pp[0], hei = pp[1], xcen = pp[2], ycen = pp[3];
         sprites[i].x = xcen; sprites[i].y = ycen;
-	uint32_t* data;
+        uint32_t* data;
 
-    sprites[i].s = SDL_CreateRGBSurface(SDL_SWSURFACE, wid, hei, 32,
-                    0xff, 0xff00, 0xff0000, 0xff000000);
-    SDL_LockSurface(sprites[i].s);
-    data = (uint32_t*)sprites[i].s->pixels;
-    for (int z = 0; z < wid*hei; z++) data[z] = 0x0;
+        sprites[i].s = SDL_CreateRGBSurface(SDL_SWSURFACE, wid, hei, 32,
+                        0xff, 0xff00, 0xff0000, 0xff000000);
+        SDL_LockSurface(sprites[i].s);
+        data = (uint32_t*)sprites[i].s->pixels;
+        for (int z = 0; z < wid*hei; z++) data[z] = 0x0;
 
-    for (uint32_t* q = p+2+hei; q < r; q++)
-    {
-        int x = ((0x0fffff00&read_littleendian_w(q))>>8)%320;
-        int y = ((0x0fffff00&read_littleendian_w(q))>>8)/320;
-        if ((y*wid+x < 0) || (y*wid+x >= wid*hei)) printf("%i: x=%i y=%i wid=%i hei=%i: bad idea\n", i, x, y, wid, hei);
-        else data[y*wid+x] = palette[0xff&read_littleendian_w(q)];
-    }
+        for (uint32_t* q = p+2+hei; q < r; q++)
+        {
+            int x = ((0x0fffff00&read_littleendian_w(q))>>8)%320;
+            int y = ((0x0fffff00&read_littleendian_w(q))>>8)/320;
+            if ((y*wid+x < 0) || (y*wid+x >= wid*hei)) printf("%i: x=%i y=%i wid=%i hei=%i: bad idea\n", i, x, y, wid, hei);
+            else data[y*wid+x] = palette[0xff&read_littleendian_w(q)];
+        }
 
-    SDL_UnlockSurface(sprites[i].s);
+        SDL_UnlockSurface(sprites[i].s);
     }
     return num_sprites;
 }

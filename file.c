@@ -53,9 +53,9 @@ FILE* find_game(int op)
     char* home = getenv("HOME");
 
     if (home)
-	    strcat(fullname, home);
+        strcat(fullname, home);
     else
-	    return NULL;
+        return NULL;
 #endif
 
     strcat(fullname, savegamename);
@@ -78,9 +78,9 @@ FILE* find_config(int op)
     char* home = getenv("HOME");
 
     if (home)
-	    strcat(fullname, home);
+        strcat(fullname, home);
     else
-	    strcat(fullname, resource_path);
+        strcat(fullname, resource_path);
 #endif
 
     strcat(fullname, configname);

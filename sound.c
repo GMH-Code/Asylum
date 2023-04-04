@@ -24,23 +24,23 @@ char sound_available;
 
 void bidforsoundforce(int r0, char r1, char r2, int r3, int r4, int r5, char r6, int r7, Mix_Chunk* chunk)
 {
-  if (options.soundtype && sound_available)
-  {
-    r2 = (r2 > options.soundvol) ? options.soundvol : r2;
-    soundclaim(r0&7, r1, r2, r3, r4, r5, r6, r7, chunk);
-  }
+    if (options.soundtype && sound_available)
+    {
+        r2 = (r2 > options.soundvol) ? options.soundvol : r2;
+        soundclaim(r0&7, r1, r2, r3, r4, r5, r6, r7, chunk);
+    }
 }
 
 void bidforsound(int r0, char r1, char r2, int r3, int r4, int r5, char r6, int r7, Mix_Chunk* chunk)
 {
-  if (options.soundtype && sound_available)
-  {
-    r2 = (r2 > options.soundvol) ? options.soundvol : r2;
-    if ((r0&7)==_Explochannel)
-      soundclaimexplo(r1, r2, r3, r4, r5, r6, r7, chunk);
-    else
-      soundclaimmaybe(r0&7, r1, r2, r3, r4, r5, r6, r7, chunk);
-  }
+    if (options.soundtype && sound_available)
+    {
+        r2 = (r2 > options.soundvol) ? options.soundvol : r2;
+        if ((r0&7)==_Explochannel)
+            soundclaimexplo(r1, r2, r3, r4, r5, r6, r7, chunk);
+        else
+            soundclaimmaybe(r0&7, r1, r2, r3, r4, r5, r6, r7, chunk);
+    }
 }
 
 void soundclaimmaybe(int r0, char r1, char r2, int r3, int r4, int r5, char r6, int r7, Mix_Chunk* chunk)

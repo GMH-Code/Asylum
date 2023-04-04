@@ -141,8 +141,8 @@ int embertrybomb(char* r0, alent* r11)
 {
     if (block_bomb(*r0))
     {
-	emberbomb(r0, r11);
-	return 1;
+        emberbomb(r0, r11);
+        return 1;
     }
     else return 0;
 }
@@ -151,8 +151,8 @@ int embertrybombtarget(char* r0, alent* r11)
 {
     if (block_bomb(*r0) || block_target(*r0)) // was excluding _targethighlim
     {
-	emberbomb(r0, r11);
-	return 1;
+        emberbomb(r0, r11);
+        return 1;
     }
     else return 0;
 }
@@ -161,8 +161,8 @@ int embertrybooby(char* r0, alent* r11)
 {
     if (block_booby(*r0))
     {
-	emberbomb(r0, r11);
-	return 1;
+        emberbomb(r0, r11);
+        return 1;
     }
     else return 0;
 }
@@ -171,8 +171,8 @@ int embertrygas(char* r0, alent* r11)
 {
     if (block_gas(*r0))
     {
-	emberbomb(r0, r11);
-	return 1;
+        emberbomb(r0, r11);
+        return 1;
     }
     else return 0;
 }
@@ -392,7 +392,7 @@ void bonuslim(char* r5)
 {
     if ((*r5 >= _neuronlowlim) && (*r5 <= _neuronhighlim))
     {
-	plsetneuronzone(*r5-(_neuronlowlim-1));
+        plsetneuronzone(*r5-(_neuronlowlim-1));
         *r5 = 0;
         return;
     }
@@ -707,24 +707,24 @@ void draw_block(fastspr_sprite* blockadr, int block, float x, float y, int layer
 {
     if (layer)
     {
-	if ((block >= 8) && (block < 12)) mazescaleplot(blockadr, block, x, y);
-	return;
+        if ((block >= 8) && (block < 12)) mazescaleplot(blockadr, block, x, y);
+        return;
     }
     if ((block == 0) || ((block >= 8) && (block < 12))) return; // was if (block==0)
     if ((block&~7) == _neuronlowlim) block = _neuronlowlim+((framectr&(7<<2))>>2);
     if (block <= _crumblestandhighlim)
     {
-	if (block >= _crumblelowlim) block &= ~8; //alter for crumbles
-	if (block_anim(block))
-	{
-	    int r1 = rand()&7;
-	    if ((block == _gaslowlim) || (block == _gashighlim)) block ^= r1>>2;
-	    else block ^= r1>>1;
-	}
+        if (block >= _crumblelowlim) block &= ~8; //alter for crumbles
+        if (block_anim(block))
+        {
+            int r1 = rand()&7;
+            if ((block == _gaslowlim) || (block == _gashighlim)) block ^= r1>>2;
+            else block ^= r1>>1;
+        }
     }
    //noanimate:
     if ((block >= _weaplowlim+1) && (block <= _weaplowlim+6))
-	block = _weaplowlim+1;
+        block = _weaplowlim+1;
     mazescaleplot(blockadr, block, x, y);
 }
 

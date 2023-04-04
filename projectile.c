@@ -93,7 +93,7 @@ void project()       // the projectile handler
         {
             int r6;
             if (r11->flags&PROJ_ROCKET)
-	        r6 = projhital(rs,bulletloss<<2);
+                r6 = projhital(rs,bulletloss<<2);
             else r6 = projhital(rs, bulletloss);
             r11->type = 0;
             if (r6 == 0) continue;
@@ -106,7 +106,7 @@ void project()       // the projectile handler
         char* r0 = fntranslate(r11->x, r11->y);
         char r1 = *r0;
         if ((r1 < 16) ||
-            //    projhit:  // hit a block
+           //projhit:  // hit a block
             ((r1 >= _translowlim) && (r1 <= _transhighlim) && !(r11->flags&PROJ_ATOM)))
         {
            //projhitins:
@@ -117,7 +117,7 @@ void project()       // the projectile handler
        //projhitcont:
         if ((r1 >= _spcrumblelowlim) && (r1 <= _spcrumblehighlim)
             && ((r11->type == _projsmallno+2) || (r11->flags&PROJ_WEIRDSPLIT)))
-          // hack, better than original && (plweapontype == 5)
+        // hack, better than original && (plweapontype == 5)
         {
             *r0 = 0;
             explogo(r11->x, r11->y, 0, 0, 0, 0, 0);

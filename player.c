@@ -409,11 +409,11 @@ void plmove()
 //if (fire) goto cheatmove;
 
     if (snuffctr != 0)
-	ks.uppress = ks.downpress = ks.leftpress = ks.rightpress = ks.fire = 0;
+        ks.uppress = ks.downpress = ks.leftpress = ks.rightpress = ks.fire = 0;
     vvec -= vvec>>5;
     hvec -= hvec>>5;
     if (ks.leftpress != ks.rightpress)
-	plface = (ks.leftpress > ks.rightpress) ? 1 : 0;
+        plface = (ks.leftpress > ks.rightpress) ? 1 : 0;
 
     int r2;
     if ((ks.leftpress < 4) && (ks.rightpress < 4)) r2 = 1<<8; else r2 = 2<<8;
@@ -489,7 +489,7 @@ void plmove()
     pladr8 = pladr7+1;
     if (falling >= 8)
         if (vvec >= (2<<8))
-	{
+        {
             crumblecheck(pladr7);
             crumblecheck(pladr8);
         }
@@ -569,7 +569,7 @@ void plmove()
                 *pladr7 = 14;
                 shutdownctr = 1;
                 neuronctr++;
-		int soundvol = 0x7f;
+                int soundvol = 0x7f;
                 bidforsoundforce(3, _Samprave, 0x1f, (3<<8)|0x3000, (soundvol<<25)|0x1000,
                                  0x100ff00, 100, (3<<6)-96, CHUNK_SHUTDOWN_1);
                 bidforsoundforce(2, _Samprave, 0x1f, (2<<8)|0x3000, (soundvol<<25)|0x1000,
@@ -585,9 +585,9 @@ void windcheck()
 {
     if (*pladr1 == 0) return;
     if (!seeifwind(pladr4, &hvec, &vvec,
-		   seeifwind(pladr3, &hvec, &vvec,
-			     seeifwind(pladr2, &hvec, &vvec,
-				       seeifwind(pladr1, &hvec, &vvec, 0)))))
+                   seeifwind(pladr3, &hvec, &vvec,
+                             seeifwind(pladr2, &hvec, &vvec,
+                                       seeifwind(pladr1, &hvec, &vvec, 0)))))
         windctr -= 64;
     if (--windctr < 0) windctr = 0;
 }
@@ -625,10 +625,10 @@ void alfire()
     if (y > yposmax-(1<<12)) return;
     x &= ~0xfff; y &= ~0xfff;
     if (foundtarget(x, y, (xpos-x)>>6, ((ypos+(12<<8))-y-(16<<8))>>6))
-	return;
+        return;
    //nofoundtarget:
     if (foundtarget(x+(1<<12), y, (xpos-x-(1<<12))>>6, ((ypos+(12<<8))-y-(16<<8))>>6))
-	return;
+        return;
     return;
 }
 
@@ -685,7 +685,7 @@ void telep()
     char r4 = *pladr7;
     int r5 = (r4&2) ? 1 : -1;
     if ((ks.leftpress >= 64) && (ks.uppress == 0) && (ks.fire != 0)
-	&& (ks.fire <= ks.downpress) && (ks.rightpress >= 64))
+        && (ks.fire <= ks.downpress) && (ks.rightpress >= 64))
     {
         r5 = -r5;
         bidforsound(_Explochannel, _SampJump, 0x7f, 0x1000, 0, 0, 50, 0, CHUNK_TELEP_1);
@@ -1136,7 +1136,7 @@ void scoreadd()
     int placeval = 100000000;
     for (int r6 = 8; r6 > 0; r6--)
     {
-	placeval /= 10;
+        placeval /= 10;
        //loop37:
         if (plscoreadd >= placeval)
         {
@@ -1286,9 +1286,9 @@ void reinitplayer()
     rocketblamctr = 0; shutdownctr = 0;
     if (gotallneurons())
     {
-	completedzone();
-	lives = 0;
-	snuffctr = 1;
+        completedzone();
+        lives = 0;
+        snuffctr = 1;
     }
     else
     {
@@ -1314,12 +1314,12 @@ int player_dead()
     if (snuffctr >= 300)
     {
        //playerdead:
-	showgamescreen();
-	if (lives == 0) return 2;
-	lives--;
-	if (lives > 9) lives = 9;
-	prepstrength();
-	return 1;
+        showgamescreen();
+        if (lives == 0) return 2;
+        lives--;
+        if (lives > 9) lives = 9;
+        prepstrength();
+        return 1;
     }
     else return 0;
 }
