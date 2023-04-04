@@ -1,7 +1,7 @@
 #HOST=generic
-HOST=mingw
+#HOST=mingw
 #HOST=haiku
-#HOST=emcc
+HOST=emcc
 
 CC=gcc
 RM=rm
@@ -66,7 +66,9 @@ ifeq ($(HOST),emcc)
 	INSTALLRESOURCEPATH=/usr/share/games/asylum
 	INSTALLHISCORES=/var/games/asylum
 	INSTALLCONFIG=/var/games/asylum
-	LIBS=-sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sASYNCIFY -sINITIAL_MEMORY=67108864 -sTOTAL_STACK=32MB -sALLOW_MEMORY_GROWTH -o asylum.html --preload-file=data --preload-file=hiscores --preload-file=config
+	LIBS=-sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sASYNCIFY -sINITIAL_MEMORY=32MB -sTOTAL_STACK=1MB -sALLOW_MEMORY_GROWTH \
+		 -o asylum.html --preload-file=data --preload-file=hiscores/.emptyfile --preload-file=config/.emptyfile \
+		 --shell-file custom_shell.html
 endif
 
 default: build
