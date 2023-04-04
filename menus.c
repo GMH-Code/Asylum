@@ -427,11 +427,13 @@ void tunespeed()
             showtext();
             int r0 = readopt(4);
             if (r0 == -1) return;
+#ifndef __EMSCRIPTEN__
             else if (r0 == 1)
             {
                 options.fullscreen ^= 1;
                 vduread(options); break;
             }
+#endif
             else if (r0 == 2)
             {
                 options.size = (options.size+1) % 5;
