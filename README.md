@@ -68,6 +68,7 @@ List of Improvements
 - If you have a weapon when saving a game, it will refrain from firing when you resume.
 - Rocket launchers with starburst now have projectiles emitted at the proper time.
 - In this version, an extra life is awarded for every 100,000 points, which gives an incentive to get the bonuses in sequence.
+- If you are playing online and save your progress, you should be able to restore the game even after closing the browser.
 
 #### Build
 
@@ -76,6 +77,7 @@ List of Improvements
 - Fixed C compiler warnings when using `-Wall -Wextra` as arguments.
 - Many redundant parts of the code have been removed.  Some have been temporarily removed if the feature is incompatible or not working on modern systems.
 - Builds in WebAssembly and plays at full speed even on older systems.
+- If playing in a browser, user data is saved in IDBFS (the browser's database).
 
 #### Display
 

@@ -458,6 +458,7 @@ void getvars();
 void init_palette();
 void vduread(asylum_options);
 void vdushutdown();
+void wasm_sync_fs();
 int main(int argc, char** argv);
 void load_voices();
 void init_sounds();

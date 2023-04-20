@@ -21,6 +21,10 @@
 #include "asylum_os.h"
 #include "asylum.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #define _firstzone 0
 
 #define _soundentlen 16
@@ -470,9 +474,64 @@ void c_array_initializers()
     init_keyboard();
 }
 
+#ifdef __EMSCRIPTEN__
+    EM_JS(void, wasm_init_restore, (), {
+        Module.restore_complete = 0;
+    });
+
+    EM_JS(int, wasm_check_restore, (), {
+        return Module.restore_complete;
+    });
+#endif
+
+void wasm_sync_fs()
+{
+#ifdef __EMSCRIPTEN__
+    // Write FS modifications into IDBFS (asynchronous)
+    EM_ASM(
+        console.info("Saving data...");
+        FS.syncfs(function (err) {
+            if (err)
+                console.warn("Failed to save data: " + err);
+            else
+                console.info("Data saved.");
+        });
+    );
+#endif
+}
+
 int main(int argc, char** argv)
 {
     printf("Asylum by Andy Southgate\nC version by Hugh Robinson\nUpdates by Gregory Maynard-Hoare\n");
+
+#ifdef __EMSCRIPTEN__
+    wasm_init_restore();
+
+    // Request JavaScript loads user data from IDBFS (asynchronous)
+    EM_ASM(
+        FS.mkdir("/config");
+        FS.mount(IDBFS, {}, "/config");
+        FS.mkdir("/hiscores");
+        FS.mount(IDBFS, {}, "/hiscores");
+        console.info("Loading data...");
+        FS.syncfs(true, function (err) {
+            if (err)
+                console.warn("Failed to load data: " + err);
+            else
+                console.info("Data loaded.");
+
+            Module.restore_complete = 1;
+        });
+    );
+
+    // Wait for the asynchronous load of user data to finish
+    while (!wasm_check_restore()) {
+        printf("Waiting for data to be restored...\n");
+        emscripten_sleep(100);
+    }
+
+    printf("Data restoration complete.\n");
+#endif
 
     find_resources();
 
@@ -754,6 +813,7 @@ void saveconfig()
                                  options.initials[2],
             ((options.idpermit == 1) ? idpermitstring : ""));
     fclose(r0);
+    wasm_sync_fs();
 }
 
 void loadgame()
@@ -810,6 +870,7 @@ void savegame()
         fwrite(neuronadr->contents, neuronadr->width, neuronadr->height, r0);
     }
     fclose(r0);
+    wasm_sync_fs();
 }
 
 void permitid()
@@ -821,6 +882,7 @@ void permitid()
     {
         fprintf(r0, "%s", idpermitstring);
         fclose(r0);
+        wasm_sync_fs();
     }
     options.idpermit = 1;
 }

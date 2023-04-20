@@ -47,7 +47,7 @@ FILE* find_game(int op)
 {
     char fullname[PATH_MAX] = "";
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__EMSCRIPTEN__)
     strcpy(fullname, config_path);
 #else
     char* home = getenv("HOME");
@@ -72,7 +72,7 @@ FILE* find_config(int op)
 {
     char fullname[PATH_MAX] = "";
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__EMSCRIPTEN__)
     strcat(fullname, config_path);
 #else
     char* home = getenv("HOME");
@@ -288,6 +288,7 @@ void savescores(char* highscorearea, int mentalzone)
         fseek(f, 0, SEEK_SET);
         fwrite(highscorearea, 1, 13*5+1, f);
         fflush(f);
+        //wasm_sync_fs(); // Avoid duplicate sync warning (config is saved immediately after high score updates)
     }
 }
 
@@ -344,6 +345,7 @@ int swi_osfile(int op, const char* name, char* start, char* end)
         f = fopen(name, "wb");
         for (char* i = start; i < end; i++) fputc(*i, f);
         fclose(f);
+        wasm_sync_fs();
         return 0;
     case 5: // test file existence
         f = fopen(name, "rb");
