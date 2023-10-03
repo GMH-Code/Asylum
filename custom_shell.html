@@ -5,7 +5,12 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Asylum</title>
     <style>
-      body { background-color: black; color: white;  font-family:Arial,Helvetica,sans-serif; }
+      body {
+        background-color: black;
+        color: white;
+        font-family:Arial,Helvetica,sans-serif;
+        margin: 0px;
+      }
       .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
       textarea.emscripten {
         font-family: monospace;
@@ -15,9 +20,15 @@
         border: 1px solid rgb(64, 64, 64);
       }
       div.emscripten { text-align: center; }
-      div.emscripten_border { border: 1px solid rgb(64, 64, 64); }
       /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
-      canvas.emscripten { border: 0px none; background-color: black; }
+      canvas.emscripten {
+        border: 0px none;
+        background-color: black;
+        width: calc(min(100vw, 100vh * 1.25));
+        height: calc(min(100vh, 100vw * 0.8));
+        padding-top: calc(0.5 * (100vh - (min(100vh, 100vw * 0.8))));
+        display: none;
+      }
 
       .spinner {
         height: 50px;
@@ -55,20 +66,18 @@
   </head>
   <body>
     <figure style="overflow:visible;" id="spinner"><div class="spinner"></div><center style="margin-top:0.5em"><strong>Asylum</strong></center></figure>
+    <div class="emscripten" id="quit" style="margin:8px; display:none"></div>
     <div class="emscripten" id="status">Downloading...</div>
     <div class="emscripten">
       <progress value="0" max="100" id="progress" hidden=1></progress>  
     </div>
-    <div class="emscripten_border">
-      <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
-    </div>
-    
-    <hr/>
-    <textarea class="emscripten" id="output" rows="8"></textarea>
+    <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+
     <script type='text/javascript'>
       var statusElement = document.getElementById('status');
       var progressElement = document.getElementById('progress');
       var spinnerElement = document.getElementById('spinner');
+      var canvasElement = document.getElementById('canvas');
 
       var Module = {
         preRun: [],
@@ -91,14 +100,12 @@
           };
         })(),
         canvas: (function() {
-          var canvas = document.getElementById('canvas');
-
           // As a default initial behavior, pop up an alert when webgl context is lost. To make your
           // application robust, you may want to override this behavior before shipping!
           // See http://www.khronos.org/registry/webgl/specs/latest/1.0/#5.15.2
-          canvas.addEventListener("webglcontextlost", function(e) { alert('WebGL context lost. You will need to reload the page.'); e.preventDefault(); }, false);
+          canvasElement.addEventListener("webglcontextlost", function(e) { alert('WebGL context lost. You will need to reload the page.'); e.preventDefault(); }, false);
 
-          return canvas;
+          return canvasElement;
         })(),
         setStatus: function(text) {
           if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
@@ -126,6 +133,15 @@
         monitorRunDependencies: function(left) {
           this.totalDependencies = Math.max(this.totalDependencies, left);
           Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+        },
+        onRuntimeInitialized: function() {
+          canvasElement.style.display = 'block';
+        },
+        onExit: function(status) {
+          const quitElement = document.getElementById('quit');
+          quitElement.innerHTML = status === 0 ? 'Asylum has exited.' : 'Asylum exited with code ' + status;
+          quitElement.style.display = 'block';
+          canvasElement.style.display = 'none';
         }
       };
       Module.setStatus('Downloading...');

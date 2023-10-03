@@ -67,7 +67,7 @@ ifeq ($(HOST),emcc)
 	INSTALLHISCORES=/var/games/asylum
 	INSTALLCONFIG=/var/games/asylum
 	LIBS=-sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sASYNCIFY -sINITIAL_MEMORY=32MB -sTOTAL_STACK=1MB -sALLOW_MEMORY_GROWTH \
-		 -o asylum.html --preload-file=data --shell-file custom_shell.html -lidbfs.js
+		 -sEXIT_RUNTIME=1 -o index.html --preload-file=data --shell-file custom_shell.html -lidbfs.js
 endif
 
 default: build

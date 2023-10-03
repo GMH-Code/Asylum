@@ -391,13 +391,17 @@ void tunevolume()
 
 
 char speed1[] = "-1. Full Screen";
-char speed2[] = "-3. Half Scale";
+char speed2[] = "-3. Double Playfield";
 char speed3[] = "-4. High Frame Rate";
+#ifdef __EMSCRIPTEN__
+char sizedesc[][19] = {"-2. Browser Scaled"};
+#else
 char sizedesc[][16] = {"-2.  320 x  256",
                        "-2.  640 x  512",
                        "-2.  960 x  768",
                        "-2. 1280 x 1024",
                        "-2. 1600 x 1280"};
+#endif
 
 void tunespeed()
 {
@@ -408,8 +412,11 @@ void tunespeed()
         {
            //tunespeedloop:
             wipetexttab();
+#ifndef __EMSCRIPTEN__
+            // Don't update tick or cross if not running in Emscripten
             if (options.fullscreen == 1) speed1[0] = 16;
             else speed1[0] = 17;
+#endif
             if (options.scale == 2) speed2[0] = 16;
             else speed2[0] = 17;
             if (options.arm3 == 1) speed3[0] = 16;
@@ -433,7 +440,6 @@ void tunespeed()
                 options.fullscreen ^= 1;
                 vduread(options); break;
             }
-#endif
             else if (r0 == 2)
             {
                 options.size = (options.size+1) % 5;
@@ -445,6 +451,7 @@ void tunespeed()
                 */
                 break;
             }
+#endif
             else if (r0 == 3)
             {
                 options.scale ^= 3;

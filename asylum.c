@@ -272,7 +272,11 @@ void setdefaults()
     options.firekey = keydefs[4];
     options.fullscreen = 0;
     options.arm3 = 1;
+#ifdef __EMSCRIPTEN__
+    options.size = 0; // 320 x 256
+#else
     options.size = 1; // 640 x 512
+#endif
     options.scale = 1;
     options.mentalzone = 1;
     options.initials[0] = 'P';
@@ -770,9 +774,13 @@ void loadconfig()
             case 4: options.firekey = -temp; break;
             case 5: options.soundtype = temp; break;
                 //case 6: options.soundquality=temp; break;
+#ifndef __EMSCRIPTEN__
             case 7: options.fullscreen = temp; break;
+#endif
             case 8: options.arm3 = temp; break;
+#ifndef __EMSCRIPTEN__
             case 9: options.size = temp; break;
+#endif
             case 10: options.scale = temp; break;
             case 11: options.soundvol = temp; break;
             case 12: options.musicvol = temp; break;
