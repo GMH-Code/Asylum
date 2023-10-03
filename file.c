@@ -220,7 +220,7 @@ void set_paths()
     }
 #endif
 
-    fprintf(stderr, "Running as uninstalled, looking for files in local directory.\n");
+    fprintf(stdout, "Running as uninstalled, looking for files in local directory.\n");
 
 #ifdef HAVE_GET_EXE_PATH
     char exe_path[PATH_MAX];
