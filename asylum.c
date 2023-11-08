@@ -535,6 +535,8 @@ int main(int argc, char** argv)
     }
 
     printf("Data restoration complete.\n");
+
+    SDL_SetHint(SDL_HINT_EMSCRIPTEN_ASYNCIFY, "0");
 #endif
 
     find_resources();

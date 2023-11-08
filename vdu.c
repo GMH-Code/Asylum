@@ -89,6 +89,10 @@ void switchbank()
     SDL_RenderClear(ArcRenderer);
     SDL_RenderCopy(ArcRenderer, ArcTexture, NULL, NULL);
     SDL_RenderPresent(ArcRenderer);
+
+#ifdef __EMSCRIPTEN__
+    emscripten_sleep(0);
+#endif
 }
 
 void fspplotscaled(fastspr_sprite* sprites, char n, float x, float y,
