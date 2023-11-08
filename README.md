@@ -119,7 +119,7 @@ List of Improvements
 WebAssembly Notes
 -----------------
 
-If you use GZ compression (or better, Brotli, pre-compressed files, and good caching headers) on a web server, the entire game can be sent to the client in under 800KB.  This results in an almost immediate load, and includes:
+If you use GZ compression (or better, Brotli, pre-compressed files, and good caching headers) on a web server, the entire game can be sent to the client in under 700KB.  This results in an almost immediate load, and includes:
 
 - All the game code
 - 27 levels
