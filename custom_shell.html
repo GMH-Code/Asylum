@@ -8,17 +8,10 @@
       body {
         background-color: black;
         color: white;
-        font-family:Arial,Helvetica,sans-serif;
+        font-family: Arial,Helvetica,sans-serif;
         margin: 0px;
       }
       .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
-      textarea.emscripten {
-        font-family: monospace;
-        width: 80%;
-        background-color: black;
-        color: white;
-        border: 1px solid rgb(64, 64, 64);
-      }
       div.emscripten { text-align: center; }
       /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
       canvas.emscripten {
@@ -26,8 +19,15 @@
         background-color: black;
         width: calc(min(100vw, 100vh * 1.25));
         height: calc(min(100vh, 100vw * 0.8));
-        padding-top: calc(0.5 * (100vh - (min(100vh, 100vw * 0.8))));
+        margin-top: calc(0.5 * (100vh - (min(100vh, 100vw * 0.8))));
         display: none;
+      }
+      @supports (height: 1dvh) {
+        canvas.emscripten {
+          width: calc(min(100dvw, 100dvh * 1.25));
+          height: calc(min(100dvh, 100dvw * 0.8));
+          margin-top: calc(0.5 * (100dvh - (min(100dvh, 100dvw * 0.8))));
+        }
       }
 
       .spinner {
@@ -83,20 +83,9 @@
         preRun: [],
         postRun: [],
         print: (function() {
-          var element = document.getElementById('output');
-          if (element) element.value = ''; // clear browser cache
           return function(text) {
             if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-            // These replacements are necessary if you render to raw HTML
-            //text = text.replace(/&/g, "&amp;");
-            //text = text.replace(/</g, "&lt;");
-            //text = text.replace(/>/g, "&gt;");
-            //text = text.replace('\n', '<br>', 'g');
             console.log(text);
-            if (element) {
-              element.value += text + "\n";
-              element.scrollTop = element.scrollHeight; // focus on bottom
-            }
           };
         })(),
         canvas: (function() {
