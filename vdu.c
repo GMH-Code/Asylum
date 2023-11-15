@@ -585,8 +585,8 @@ void init_strengthcol()
     int redpitch, greypitch;
     int w = vduvar.strengthw, h = 32+vduvar.strengthh;
 
-    redness = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32, 0xff, 0xff00, 0xff0000, 0);
-    greyness = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32, 0xff, 0xff00, 0xff0000, 0);
+    redness = SDL_CreateRGBSurface(0, w, h, 32, 0xff, 0xff00, 0xff0000, 0);
+    greyness = SDL_CreateRGBSurface(0, w, h, 32, 0xff, 0xff00, 0xff0000, 0);
     SDL_LockSurface(redness);
     SDL_LockSurface(greyness);
     redpixels = (Uint32*)redness->pixels;
@@ -630,7 +630,7 @@ void decomp(fastspr_sprite* DecompScreen, char* r11)
     Uint32* r10;
     Uint32* r9;
     
-    DecompScreen->s = SDL_CreateRGBSurface(SDL_SWSURFACE, 320, 256, 32,
+    DecompScreen->s = SDL_CreateRGBSurface(0, 320, 256, 32,
                         0xff, 0xff00, 0xff0000, 0);
     SDL_LockSurface(DecompScreen->s);
     r10 = (Uint32*)DecompScreen->s->pixels;
@@ -694,6 +694,12 @@ void vduread(asylum_options options)
     vduvar.scale = scale;
     vdushutdown();
 
+#ifdef __EMSCRIPTEN__
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+#else
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
+#endif
+
     ArcWindow = SDL_CreateWindow(
         "Asylum",
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
@@ -713,9 +719,14 @@ void vduread(asylum_options options)
         abort_game();
     }
 
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
     SDL_RenderSetLogicalSize(ArcRenderer, vduvar.width, vduvar.height);
-    ArcScreen = SDL_GetWindowSurface(ArcWindow);
+    ArcScreen = SDL_CreateRGBSurface(0, vduvar.width, vduvar.height, 32, 0xff, 0xff00, 0xff0000, 0);
+
+    if (ArcScreen == NULL) {
+        fprintf(stderr, "Failed to create surface: %s\n", SDL_GetError());
+        abort_game();
+    }
+
     ArcTexture = SDL_CreateTexture(
         ArcRenderer,
 #ifdef __EMSCRIPTEN__
@@ -727,15 +738,14 @@ void vduread(asylum_options options)
         vduvar.width, vduvar.height
     );
 
-    if (ArcScreen == NULL)
-    {
-        printf("Failed to set video mode: %s\n", SDL_GetError());
+    if (ArcTexture == NULL) {
+        fprintf(stderr, "Failed to create texture: %s\n", SDL_GetError());
         abort_game();
     }
 
-    wipescr = SDL_CreateRGBSurface(SDL_SWSURFACE, 128*scale, 16*scale, 32, 0xff, 0xff00, 0xff0000, 0);
+    wipescr = SDL_CreateRGBSurface(0, 128*scale, 16*scale, 32, 0xff, 0xff00, 0xff0000, 0);
     // backsprite contains four copies of the backdrop tile
-    backsprite = SDL_CreateRGBSurface(SDL_SWSURFACE, 2*48, 2*32, 32, 0xff, 0xff00, 0xff0000, 0);
+    backsprite = SDL_CreateRGBSurface(0, 2*48, 2*32, 32, 0xff, 0xff00, 0xff0000, 0);
     /* initialise screenstart(149), modesize(7), hbytes(6) */
     init_strengthcol();
     SDL_ShowCursor(SDL_DISABLE);
@@ -743,14 +753,25 @@ void vduread(asylum_options options)
 
 void vdushutdown()
 {
-    if (ArcTexture != NULL)
+    if (ArcTexture != NULL) {
         SDL_DestroyTexture(ArcTexture);
+        ArcTexture = NULL;
+    }
 
-    if (ArcRenderer != NULL)
+    if (ArcScreen != NULL) {
+        SDL_FreeSurface(ArcScreen);
+        ArcScreen = NULL;
+    }
+
+    if (ArcRenderer != NULL) {
         SDL_DestroyRenderer(ArcRenderer);
+        ArcRenderer = NULL;
+    }
 
-    if (ArcWindow != NULL)
+    if (ArcWindow != NULL) {
         SDL_DestroyWindow(ArcWindow);
+        ArcWindow = NULL;
+    }
 }
 
 void backprep(char* backadr)
@@ -873,7 +894,7 @@ int initialize_sprites(char* start, fastspr_sprite* sprites, int max_sprites, ch
         sprites[i].x = xcen; sprites[i].y = ycen;
         uint32_t* data;
 
-        sprites[i].s = SDL_CreateRGBSurface(SDL_SWSURFACE, wid, hei, 32,
+        sprites[i].s = SDL_CreateRGBSurface(0, wid, hei, 32,
                         0xff, 0xff00, 0xff0000, 0xff000000);
         SDL_LockSurface(sprites[i].s);
         data = (uint32_t*)sprites[i].s->pixels;
