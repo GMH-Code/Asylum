@@ -424,12 +424,14 @@ void showstrength(int r3)
     strengthloc.y = vduvar.strengthy;
     strengthloc.w = vduvar.strengthw;
     strengthloc.h = vduvar.strengthh;
-    strengthpart.x = 0; strengthpart.y = framectr&0x1f;
+    strengthpart.x = 0;
+    strengthpart.y = (framectr >> 1) & 0x1f;
     strengthpart.w = vduvar.strengthw/vduvar.scale;
     strengthpart.h = vduvar.strengthh/vduvar.scale;
     SDL_BlitScaled(greyness, &strengthpart, ArcScreen, &strengthloc);
     strengthloc.w = (vduvar.strengthw*r3)/_strengthmax;
     strengthpart.w = strengthloc.w/vduvar.scale;
+    strengthpart.y = framectr & 0x1f;
     SDL_BlitScaled(redness, &strengthpart, ArcScreen, &strengthloc);
     writeclip();
     return;
