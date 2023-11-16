@@ -670,6 +670,8 @@ void vduread(asylum_options options)
 {
     int scale = options.scale;
     int viewsize = 8*scale;
+    int fullscreen_flag = 0;
+
     vduvar.xreso = 320*(options.size+1);
     vduvar.yreso = 256*(options.size+1);
     vduvar.width = 320*scale; vduvar.height = 256*scale;
@@ -692,7 +694,6 @@ void vduread(asylum_options options)
     vduvar.bonusx = 290*scale; vduvar.bonusy = 232*scale; vduvar.bonush = 20*scale;
     vduvar.sprw = 16; vduvar.sprh = 16;
     vduvar.scale = scale;
-    vdushutdown();
 
 #ifdef __EMSCRIPTEN__
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
@@ -700,26 +701,39 @@ void vduread(asylum_options options)
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
 #endif
 
-    ArcWindow = SDL_CreateWindow(
-        "Asylum",
-        SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-        vduvar.xreso, vduvar.yreso,
-        (options.fullscreen ? SDL_WINDOW_FULLSCREEN : 0)
-    );
+    fullscreen_flag = options.fullscreen ? SDL_WINDOW_FULLSCREEN : 0;
 
     if (ArcWindow == NULL) {
-        fprintf(stderr, "Failed to create window: %s\n", SDL_GetError());
-        abort_game();
-    }
+        ArcWindow = SDL_CreateWindow(
+            "Asylum",
+            SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+            vduvar.xreso, vduvar.yreso, fullscreen_flag
+        );
 
-    ArcRenderer = SDL_CreateRenderer(ArcWindow, -1, 0);
+        if (ArcWindow == NULL) {
+            fprintf(stderr, "Failed to create window: %s\n", SDL_GetError());
+            abort_game();
+        }
 
-    if (ArcRenderer == NULL) {
-        fprintf(stderr, "Failed to create renderer: %s\n", SDL_GetError());
-        abort_game();
+        ArcRenderer = SDL_CreateRenderer(ArcWindow, -1, 0);
+
+        if (ArcRenderer == NULL) {
+            fprintf(stderr, "Failed to create renderer: %s\n", SDL_GetError());
+            abort_game();
+        }
+    } else {
+        SDL_SetWindowSize(ArcWindow, vduvar.xreso, vduvar.yreso);
+        SDL_SetWindowFullscreen(ArcWindow, fullscreen_flag);
+
+        if (!fullscreen_flag)
+            SDL_SetWindowPosition(ArcWindow, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
     }
 
     SDL_RenderSetLogicalSize(ArcRenderer, vduvar.width, vduvar.height);
+
+    if (ArcScreen != NULL)
+        SDL_FreeSurface(ArcScreen);
+
     ArcScreen = SDL_CreateRGBSurface(0, vduvar.width, vduvar.height, 32, 0xff, 0xff00, 0xff0000, 0);
 
     if (ArcScreen == NULL) {
@@ -727,15 +741,11 @@ void vduread(asylum_options options)
         abort_game();
     }
 
+    if (ArcTexture != NULL)
+        SDL_DestroyTexture(ArcTexture);
+
     ArcTexture = SDL_CreateTexture(
-        ArcRenderer,
-#ifdef __EMSCRIPTEN__
-        SDL_PIXELFORMAT_BGR888,
-#else
-        SDL_PIXELFORMAT_RGB888,
-#endif
-        SDL_TEXTUREACCESS_STREAMING,
-        vduvar.width, vduvar.height
+        ArcRenderer, SDL_PIXELFORMAT_BGR888, SDL_TEXTUREACCESS_STREAMING, vduvar.width, vduvar.height
     );
 
     if (ArcTexture == NULL) {
@@ -749,29 +759,6 @@ void vduread(asylum_options options)
     /* initialise screenstart(149), modesize(7), hbytes(6) */
     init_strengthcol();
     SDL_ShowCursor(SDL_DISABLE);
-}
-
-void vdushutdown()
-{
-    if (ArcTexture != NULL) {
-        SDL_DestroyTexture(ArcTexture);
-        ArcTexture = NULL;
-    }
-
-    if (ArcScreen != NULL) {
-        SDL_FreeSurface(ArcScreen);
-        ArcScreen = NULL;
-    }
-
-    if (ArcRenderer != NULL) {
-        SDL_DestroyRenderer(ArcRenderer);
-        ArcRenderer = NULL;
-    }
-
-    if (ArcWindow != NULL) {
-        SDL_DestroyWindow(ArcWindow);
-        ArcWindow = NULL;
-    }
 }
 
 void backprep(char* backadr)

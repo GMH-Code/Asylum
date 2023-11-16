@@ -108,8 +108,6 @@ void init()
         }
         showhighscore();
     }
-
-    vdushutdown();
 }
 
 int abort_game()
