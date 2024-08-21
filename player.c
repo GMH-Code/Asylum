@@ -74,7 +74,9 @@ const char _mpmgblamno = 8, _rocketblamno = 16;
 #define _deadsprbase 70
 
 #define _rockbase 9
+#define _rocktop 16
 #define _mpmgbase 1
+#define _mpmgtop 8
 
 #define _plheight (32<<8)
 #define _plwidth (16<<8)
@@ -911,7 +913,11 @@ void getarms()
 
 void getrocket()
 {
-    plweapontype = _rockbase+(rand()&7);
+    plweapontype++;
+
+    if (plweapontype < _rockbase || plweapontype > _rocktop)
+        plweapontype = _rockbase;
+
     plweaponspeed = 2;
     firerate = 12;
     blamctr = 0;
@@ -919,7 +925,11 @@ void getrocket()
 
 void getmpmg()
 {
-    plweapontype = _mpmgbase+(rand()&7);
+    plweapontype++;
+
+    if (plweapontype > _mpmgtop)
+        plweapontype = _mpmgbase;
+
     plweaponspeed = 8;
     firerate = 4;
     blamctr = 0;
@@ -1212,6 +1222,12 @@ void giveextralife()
     if (lives > 9) lives = 9;
     showlives_v();
     extra_life_scroll();
+}
+
+void maxlives()
+{
+    lives = 9;
+    showlives_v();
 }
 
 void pllosestrength(int str)

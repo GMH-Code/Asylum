@@ -140,6 +140,27 @@ Other Points
 - This version of the game is based on an unmodified copy of 0.3.2 from Hugh Robinson (*blotwell*).
 - The original README is now named README.original to avoid conflicts.
 
+Cheat Mode
+----------
+
+Like the original game, this version supports cheats.  In the original, you had to press both `ALT` keys and click the middle mouse button whilst the introductory scroll text was showing.  In this version, you can do the same, but click *any* mouse button.
+
+Previously, you could also start in a specific sub-level by quickly holding down a numeric key after starting the game and before the zone finished loading.  In this version, you can press a key during play to instantly teleport.
+
+The keys are as follows:
+
+- `F1`: Rotate through miniguns (random in the original).
+- `F2`: Rotate through rocket launchers (also previously random).
+- `F3`: Restore health to maximum.
+- `F4`: 9 lives (not present in the original game).
+- `1`: Go back to the zone's hub level.
+- `2`-`9`: Switch to a neuron sub-level.
+
+Careless usage of cheats can break the game!  For example:
+
+- Using the Megablam rocket launcher in areas/levels not designed for it could destroy routes.
+- Completing neuron sub-levels multiple times will end the game early.
+
 Building from Source
 --------------------
 

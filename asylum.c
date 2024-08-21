@@ -128,7 +128,6 @@ int game()
     startmessage();
     startplayer();
     getarms();
-    if (cheatpermit == 1)  zonecheatread(&plzone);
     do
     {
        zonerestart:
@@ -461,12 +460,12 @@ void setup()
 //        swi_stasis_volslide(r0, 0xfc00, 0);
 //}
 
-void screensave()
-{
-    plotscore();
-//oscli("Mount");
-//oscli("Screensave Screenfile");
-}
+//void screensave()
+//{
+//    plotscore();
+//    oscli("Mount");
+//    oscli("Screensave Screenfile");
+//}
 
 void c_array_initializers()
 {

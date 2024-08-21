@@ -128,20 +128,33 @@ void update_keyboard()
     }
 }
 
-void zonecheatread(int* zone)
-{
-    char r1 = osbyte_79(); // was _81(0)
-
-    if ((r1 < 48) || (r1 > 56)) return;
-    *zone = r1-48;
-}
-
 void cheatread()
 {
-    if (osbyte_81(-282) == 0xff) getmpmg();
-    if (osbyte_81(-283) == 0xff) getrocket();
-    if (osbyte_81(-285) == 0xff) screensave();
-    if (osbyte_81(-284) == 0xff) prepstrength();
+    int key = osbyte_79();
+
+    if (key == -1)
+        return;
+
+    switch (key) {
+        case SDL_SCANCODE_F1:
+            getmpmg();
+            break;
+        case SDL_SCANCODE_F2:
+            getrocket();
+            break;
+        case SDL_SCANCODE_F3:
+            prepstrength();
+            break;
+        case SDL_SCANCODE_F4:
+            maxlives(); // Originally screensave();
+            break;
+        default:
+            if (key >= SDL_SCANCODE_1 && key <= SDL_SCANCODE_9)
+            {
+                change_zone(key - SDL_SCANCODE_1);
+            }
+            break;
+    }
 }
 
 

@@ -568,16 +568,20 @@ int prelude()
         }
        //preludetextstop:;
         int r1 = osbyte_7a();
-        if ((r1 != -1) && (r1 != 307) && (r1 != 308)) // escape
+        if ((r1 == SDL_SCANCODE_SPACE) || (r1 == SDL_SCANCODE_RETURN) || (r1 == SDL_SCANCODE_KP_ENTER))
            //endprelude:
             return cheatpermit;
-        if (readmousestate()&2)
+        if (readmousestate() != 0)
         {
            //gocheat:
-            if (osbyte_81(-SDL_SCANCODE_LALT) != 0xff) return cheatpermit;
-            if (osbyte_81(-SDL_SCANCODE_RALT) != 0xff && osbyte_81(-SDL_SCANCODE_MODE) != 0xff) return cheatpermit;
-            cheatpermit = 1;
-            scroll = 1024;
+            if (!cheatpermit &&
+                (osbyte_81(-SDL_SCANCODE_LALT) == 0xff) &&
+                (osbyte_81(-SDL_SCANCODE_RALT) == 0xff || osbyte_81(-SDL_SCANCODE_MODE) == 0xff))
+            {
+                cheatpermit = 1;
+                scroll = 1024;
+                printf("Cheats enabled.\n");
+            }
         }
     }
     osbyte_7c();
