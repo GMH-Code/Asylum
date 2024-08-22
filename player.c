@@ -1262,6 +1262,17 @@ void bonusbonus()    //not to be called by BL
 {
     bonusctr = 8;
     bonusreplot = 28;
+
+    // In the unlikely event that the player is in or is leaving a timed bonus
+    // area whilst completing the bonus sequence again, award a 10K bonus.
+    // This prevents the player from being returned to, and softlocked in, the
+    // previous bonus area.
+    if ((bonustimer > 0) || (telepctr > 0))
+    {
+        bonus1();
+        return;
+    }
+
     ks.keypressed = 0;
     char* r11 = bonusfind();
     if (r11) foundmarker(r11);

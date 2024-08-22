@@ -68,6 +68,7 @@ List of Improvements
 - If you have a weapon when saving a game, it will refrain from firing when you resume.
 - Rocket launchers with starburst now have projectiles emitted at the proper time.
 - In this version, an extra life is awarded for every 100,000 points, which gives an incentive to get the bonuses in sequence.
+- Completing the bonus sequence whilst already in a timed bonus area will award 10,000 points instead of getting you stuck.
 - If you are playing online and save your progress, you should be able to restore the game even after closing the browser.
 
 #### Build
