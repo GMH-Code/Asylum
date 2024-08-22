@@ -677,13 +677,16 @@ void showerrorok()
 
 int errorwait()
 {
-    if (osbyte_81(-74) != 0xff)
-       //loopb9:
-        while (osbyte_81(-61) != 0xff)
-            if (swi_readescapestate())
-            {
-                wipetexttab(); return 0;
-            }
+   //loopb9:
+    while ((osbyte_81(-SDL_SCANCODE_RETURN) != 0xff) && (osbyte_81(-SDL_SCANCODE_KP_ENTER) != 0xff))
+    {
+        if (swi_readescapestate())
+        {
+            wipetexttab();
+            return 0;
+        }
+        swi_blitz_wait(1);
+    }
    //waitover:
     wipetexttab();
     return 1;
