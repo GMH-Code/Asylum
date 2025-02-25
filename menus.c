@@ -50,7 +50,6 @@ int escapehandler()
         if (r9 != 0)
         {
             r9--;
-            switchbank();
             swi_fastspr_clearwindow();
             texthandler(1);
         }
@@ -109,7 +108,7 @@ int options_menu(int gameon)
 
 // if (savedornot==1) message(32,192,0,0,"4. Save Settings");
         showtext();
-        swi_blitz_wait(20); //
+        swi_blitz_wait(20); // Pause whilst waiting for option press
         switch (readopt((gameon == 0) ? 3 : 3))
         {
         case -1:
@@ -301,11 +300,10 @@ void tunesound()
         //message(32, 180, 0, 0, sound6);
         //message(32, 200, 0, 0, sound7);
         message(96, 224, 0, 0, "ESC - Exit");
-        swi_blitz_wait(1);
         swi_fastspr_clearwindow();
         showtext();
 
-        switch (readopt(7))
+        switch (readopt(4))
         {
         case 1: options.soundtype = 0; break;
         case 2: options.soundtype = 1; break;
@@ -352,11 +350,9 @@ void tunevolume()
         //if (swi_sound_speaker(0)) *tunevol1 = 17;
         //else
         //*tunevol1 = 16;
-        swi_blitz_wait(1);
         swi_fastspr_clearwindow();
         showtext();
-        int r0 = readopt(5);
-        if (r0 == -1) return;
+        int r0 = readopt(4);
 
         if (r0 == 1)
         {
@@ -364,27 +360,29 @@ void tunevolume()
             //maketestsound(options.soundvol);
             continue;
         }
-        if (r0 == 2)
+        else if (r0 == 2)
         {
             if (options.soundvol > 0) options.soundvol = (options.soundvol-1)/2;
             //maketestsound(options.soundvol);
             continue;
         }
-        if (r0 == 3)
+        else if (r0 == 3)
         {
             if (options.musicvol < 0x40) options.musicvol = options.musicvol*2+1;
             //maketestsound(options.musicvol);
             continue;
         }
-        if (r0 == 4)
+        else if (r0 == 4)
         {
             if (options.musicvol > 0) options.musicvol = (options.musicvol-1)/2;
             //maketestsound(options.musicvol);
             continue;
         }
-
-        if (r0 != 5) return;
-        //swi_sound_speaker(3-swi_sound_speaker(0));
+        else
+        {
+            return;
+            //swi_sound_speaker(3-swi_sound_speaker(0));
+        }
     }
     while (1);
 }
@@ -429,19 +427,20 @@ void tunespeed()
             message(32, 192, 0, 0, speed3);
             message(96, 224, 0, 0, "ESC - Exit");
 
-            swi_blitz_wait(1);
             swi_fastspr_clearwindow();
             showtext();
             int r0 = readopt(4);
-            if (r0 == -1) return;
-#ifndef __EMSCRIPTEN__
-            else if (r0 == 1)
+            if (r0 == 1)
             {
+#ifndef __EMSCRIPTEN__
                 options.fullscreen ^= 1;
-                vduread(options); break;
+                vduread(options);
+#endif
+                break;
             }
             else if (r0 == 2)
             {
+#ifndef __EMSCRIPTEN__
                 options.size = (options.size+1) % 5;
                 vduread(options);
                 /*
@@ -449,9 +448,9 @@ void tunespeed()
                 getgamefiles();
                 getlevelsprites();
                 */
+#endif
                 break;
             }
-#endif
             else if (r0 == 3)
             {
                 options.scale ^= 3;
@@ -463,6 +462,10 @@ void tunespeed()
                 options.arm3 ^= 1;
                 checkifarm3();
                 vduread(options); break;
+            }
+            else
+            {
+                return;
             }
         }
         while (1);
@@ -481,12 +484,12 @@ int selectkey(int x, int y, int xv, int yv, const char* a)
     showtext();
     do
     {
+        swi_blitz_wait(1); // Render whilst waiting for key redefinition
         if (need_redraw())
         {
             showchatscreen();
             showtext();
         }
-        swi_blitz_wait(1);
     }
     while ((r1 = osbyte_79()) == -1); // scan keyboard
     if (swi_readescapestate()) return 0;
@@ -501,6 +504,7 @@ int readopt(int maxopt)
     {
        //keyloop:
        //nooptstick:
+        swi_blitz_wait(1); // Render display (and process pending keys)
         r1 = osbyte_79(); // read key in time limit
         if (swi_readescapestate())
         {
@@ -519,7 +523,6 @@ int readopt(int maxopt)
             showchatscreen();
             showtext();
         }
-        swi_blitz_wait(1);
     }
 }
 
@@ -553,11 +556,10 @@ int prelude()
     for (int scroll = 256+8; swi_readescapestate() == 0;)
     {
        //loope0:
-        swi_blitz_wait(2);
+        swi_blitz_wait(2); // Render menu at scroll position
         if (scroll != 0)
         {
             scroll--;
-            switchbank();
             swi_fastspr_clearwindow();
             texthandler(1);
         }
@@ -680,12 +682,12 @@ int errorwait()
    //loopb9:
     while ((osbyte_81(-SDL_SCANCODE_RETURN) != 0xff) && (osbyte_81(-SDL_SCANCODE_KP_ENTER) != 0xff))
     {
+        swi_blitz_wait(1); // Render whilst waiting for user to confirm error
         if (swi_readescapestate())
         {
             wipetexttab();
             return 0;
         }
-        swi_blitz_wait(1);
     }
    //waitover:
     wipetexttab();
@@ -753,7 +755,6 @@ void updatehst()
         r10++;
 //int r9=1024;
         key_state ks;
-        swi_blitz_wait(20); //
         for (int i = 0; i < 3; i++) r10[i] = options.initials[i];
         for (int r8 = 3; r8 > 0; r8--, r10++)
         {
@@ -773,13 +774,14 @@ void updatehst()
                 if (*r10 < '0') *r10 = '0';
                 if (*r10 > 'Z'+4) *r10 = 'Z'+4;
                 showhst();
-                swi_blitz_wait(4);
+                swi_blitz_wait(4); // Delay for highscore character scroll
             }
             options.initials[3-r8] = *r10;
             //swi_stasis_link(1, 18);
             //swi_stasis_volslide(1, 0, 0);
             //swi_sound_control(1, 0x17c, 140, 0);
-            /*if (r8>1)*/ swi_blitz_wait(20);
+            /*if (r8>1)*/
+            swi_blitz_wait(20); // Delay for highscore character entry
         }
        //scoreexit:
         savescores(highscorearea, options.mentalzone);
@@ -808,8 +810,6 @@ int comparescore(char* r10)
 
 void showhst()
 {
-    swi_blitz_wait(1);
-    switchbank();
     showchatscores();
     wipetexttab();
     message(64, 32, 0, 0, "Zone High Scores");

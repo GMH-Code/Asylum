@@ -89,10 +89,6 @@ void switchbank()
     SDL_RenderClear(ArcRenderer);
     SDL_RenderCopy(ArcRenderer, ArcTexture, NULL, NULL);
     SDL_RenderPresent(ArcRenderer);
-
-#ifdef __EMSCRIPTEN__
-    emscripten_sleep(0);
-#endif
 }
 
 void fspplotscaled(fastspr_sprite* sprites, char n, float x, float y,
@@ -523,7 +519,6 @@ void showlives_i(int lives)
     //swi_fastspr_clearwindow();
     fspplotscaled(&GameScreen, 0, 0, 0, vduvar.scale, vduvar.scale);
     fspplotscaled(charsadr, lives%10, vduvar.livesx, vduvar.livesy, vduvar.scale, vduvar.scale);
-    //switchbank();
     writeclip();
 }
 
@@ -532,9 +527,6 @@ void showgamescreen()
     releaseclip();
     //SDL_BlitSurface(GameScreen, NULL, ArcScreen, NULL);
     fspplotscaled(&GameScreen, 0, 0, 0, vduvar.scale, vduvar.scale);
-    #if 0
-    switchbank();
-    #endif
 
     clip.x = vduvar.gamex;
     clip.y = vduvar.gamey;
@@ -551,9 +543,6 @@ void showchatscreen()
     releaseclip();
     //SDL_BlitSurface(ChatScreen, NULL, ArcScreen, NULL);
     fspplotscaled(&ChatScreen, 0, 0, 0, vduvar.scale, vduvar.scale);
-    #if 0
-    switchbank();
-    #endif
 
     clip.x = 20*vduvar.scale;
     clip.y = 20*vduvar.scale;
@@ -812,6 +801,8 @@ void swi_blitz_wait(int d)
         blitz_diff = 1;
 
     last_blitz_time = blitz_time + blitz_diff;
+
+    switchbank(); // Transfer render buffer to screen just before pause
 
 #ifdef __EMSCRIPTEN__
     emscripten_sleep((Uint32) blitz_diff);

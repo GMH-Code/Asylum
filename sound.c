@@ -106,8 +106,8 @@ Mix_Chunk* make_sound(unsigned char samp, int initpitch, int volslide, int pitch
     //Sint16 psmax = pitchslide>>16;
     double matching = 0;
     fprintf(stdout, ".");
-    swi_blitz_wait(1);
     fflush(stdout);
+    swi_blitz_wait(1); // Keep rendering whilst busy loading sounds
     for (long long unsigned int i = 0; i < numsamples*2*sizeof(Uint16); i += 4, time++, s += 2)
     {
         Uint16 mono = 0;

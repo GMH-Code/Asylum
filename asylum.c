@@ -30,7 +30,6 @@
 #define _soundentlen 16
 
 
-char bank;
 char masterplotal;
 char frameinc = 1;
 char rate50;
@@ -65,9 +64,6 @@ void init()
     loadconfig();
     vduread(options);
     //swi_removecursors();
-    bank = 1;
-    switchbank(); //set up bank variables
-    switchbank(); //set up bank variables
     checkifarm3();
     if (getfiles()) abort_game();
     //vduread(options); // set screen size from options
@@ -141,7 +137,7 @@ int game()
             swi_bodgemusic_volume(options.musicvol);
             frameinc = 1;
             rate50 = 1;
-            swi_blitz_wait(1);
+            swi_blitz_wait(1); // Render zone loading banner
             init_keyboard();
             while (!swi_readescapestate())
             {
@@ -191,19 +187,21 @@ int game()
                 scorewipe();
                 plotscore();
                 frameinc = ((options.gearchange == 0) ? 2 : 1);
-                swi_blitz_wait(frameinc);
                 if ((rate50 != 1) && (frameinc < 2)) //rate 25 but one frame passed
                 {
-                    swi_blitz_wait(1);
+                    swi_blitz_wait(frameinc + 1); // Render playfield and skip frame
                     frameinc = 2;
                     rate50 = 1;
                 }
-                else if (frameinc > 1) rate50 = 0;
+                else
+                {
+                    swi_blitz_wait(frameinc); // Render playfield
+                    if (frameinc > 1) rate50 = 0;
+                }
                //rateskip:
 
                 framectr += frameinc;
 
-                switchbank();
                 //swi_blitz_smallretrieve();
                 switch (player_dead())
                 {
@@ -228,7 +226,6 @@ int game()
 void showtext()
 {
     texthandler(0);
-    switchbank();
 }
 
 uint8_t store_for_neuron[30+78*28];
@@ -595,11 +592,11 @@ int getfiles()
 {
     getvitalfiles();
     showloading();
-    swi_blitz_wait(1);
+    swi_blitz_wait(1); // Render main loading text as soon as possible
     init_sounds();
     getmusicfiles();
     swi_bodgemusic_start(1);
-    swi_blitz_wait(1);
+    swi_blitz_wait(1); // Start playing menu music once loaded
     getgamefiles();
     return 0;
 }
